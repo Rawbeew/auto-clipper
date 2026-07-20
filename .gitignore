@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.env
+tmp/
+renders/
+downloads/
+stickman/
+node_modules/
