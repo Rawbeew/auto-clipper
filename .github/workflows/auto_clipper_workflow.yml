@@ -1,0 +1,96 @@
+name: AutoClipper Serverless Pipeline
+
+on:
+  # 1. Trigger manually from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Source Video URL (YouTube / Direct MP4)'
+        required: true
+        default: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+      max_clips:
+        description: 'Max Shorts to create (1-5)'
+        required: false
+        default: '3'
+      caption_theme:
+        description: 'Caption Theme (submagic / bold_white / neon_cyan)'
+        required: false
+        default: 'submagic'
+
+  # 2. Trigger via Cloudflare Pages Web UI (repository_dispatch API call)
+  repository_dispatch:
+    types: [make_short]
+
+  # 3. Trigger by creating a GitHub Issue
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  clip-and-post:
+    # Run if manual dispatch, repo dispatch, or labeled issue
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'repository_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'make-short') ||
+      github.event_name == 'issues'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies & FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r worker/requirements.txt
+
+      - name: Run AutoClipper Pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          YOUTUBE_OAUTH_TOKEN: ${{ secrets.YOUTUBE_OAUTH_TOKEN }}
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: |
+          # Determine source input parameters
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            URL="${{ github.event.inputs.video_url }}"
+            CLIPS="${{ github.event.inputs.max_clips }}"
+            THEME="${{ github.event.inputs.caption_theme }}"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            URL="${{ github.event.client_payload.video_url }}"
+            CLIPS="${{ github.event.client_payload.max_clips }}"
+            THEME="${{ github.event.client_payload.caption_theme }}"
+          else
+            URL="${{ github.event.issue.body }}"
+            CLIPS="3"
+            THEME="submagic"
+          fi
+
+          echo "==============================================="
+          echo "Processing Video Short Pipeline for: $URL"
+          echo "Clips Count: $CLIPS | Theme: $THEME"
+          echo "==============================================="
+
+          python worker/main.py --url "$URL" --clips "$CLIPS" --theme "$THEME"
+
+      - name: Post Comment on Issue
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🎉 **AutoClipper Complete!** Your video shorts have been extracted, cropped to 9:16 vertical, and submitted to YouTube Shorts, TikTok, and Instagram Reels."
+            })

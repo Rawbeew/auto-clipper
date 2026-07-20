@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipPulse — AI Short Video & Stickman Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-300">ClipPulse AI</h1>
+          <p class="text-xs text-indigo-400 font-medium">Cloudflare Pages • Video Clipper & Stickman Generator</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full text-xs text-emerald-300 font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Stickman Engine Ready</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+    
+    <!-- Hero Banner with Architecture Mode Switcher -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">Serverless Execution</span>
+          Zero-Hosting Video & Stickman Pipeline
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Extract shorts from YouTube links or create viral animated Stickman stories automatically.</p>
+      </div>
+
+      <!-- Execution Strategy Selector -->
+      <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold">
+        <button id="modeGithub" class="px-3 py-2 rounded-lg bg-indigo-600 text-white shadow transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub Actions Runner ($0 Free)
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Input Panel -->
+      <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur">
+        <div class="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+          <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Video Pipeline
+          </h2>
+          <!-- Tab selector -->
+          <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+            <button id="tabStickman" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow transition font-bold">
+              🎨 Animated Stickman
+            </button>
+            <button id="tabLink" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition">
+              🔗 Long Video Link
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode A: Stickman Generator -->
+        <div id="panelStickman" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Stickman Story Topic / Prompt</label>
+            <textarea id="stickmanTopic" rows="3" placeholder="e.g., Why do we dream? Explain 3 mind-blowing facts with Casually Explained style stickman animations..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100 placeholder-slate-600 shadow-inner"></textarea>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Stickman Animation Style</label>
+              <select id="stickmanStyle" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="dark_slate" selected>Minimal Slate Vector (CGP Grey)</option>
+                <option value="light_notebook">Hand-drawn Notebook</option>
+                <option value="cyber_neon">Cyber Neon Glow</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Voiceover Voice</label>
+              <select id="voiceChoice" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="onyx" selected>Onyx (Deep Narrator)</option>
+                <option value="alloy">Alloy (Clear Conversational)</option>
+                <option value="fable">Fable (Expressive British)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode B: Drop Video Link -->
+        <div id="panelLink" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Source Video URL (YouTube, Vimeo, Podcast MP4)</label>
+            <div class="relative">
+              <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100 placeholder-slate-600 shadow-inner" />
+              <button id="pasteBtn" class="absolute right-2 top-2.5 px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">Paste</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Max Clips to Extract</label>
+              <select id="maxClips" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="1">1 Top Highlight</option>
+                <option value="3" selected>3 Best Shorts</option>
+                <option value="5">5 Viral Moments</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Aspect Ratio</label>
+              <select id="aspectRatio" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="9:16" selected>9:16 Vertical (Shorts/TikTok)</option>
+                <option value="1:1">1:1 Square (Instagram Post)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Caption Theme</label>
+              <select id="captionTheme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                <option value="submagic" selected>Submagic Animated Yellow</option>
+                <option value="bold_white">Bold White Clean</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto Post Configuration -->
+        <div class="mt-6 pt-4 border-t border-slate-800">
+          <label class="block text-xs font-medium text-slate-300 mb-2">Auto-Publish Platforms</label>
+          <div class="grid grid-cols-3 gap-3">
+            <label class="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input type="checkbox" id="postYouTube" class="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700" checked />
+              <span class="text-xs font-semibold text-slate-200">YouTube Shorts</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input type="checkbox" id="postTikTok" class="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700" checked />
+              <span class="text-xs font-semibold text-slate-200">TikTok</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input type="checkbox" id="postInstagram" class="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700" checked />
+              <span class="text-xs font-semibold text-slate-200">IG Reels</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6">
+          <button id="generateBtn" class="w-full bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5 active:translate-y-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span id="btnText">Generate Stickman Video & Auto-Post</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Job Status Card -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur flex flex-col justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-4 flex items-center justify-between">
+            <span>Pipeline Status</span>
+            <span id="jobBadge" class="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Idle</span>
+          </h3>
+
+          <div id="progressBox" class="space-y-4">
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-medium">
+                <span id="stepLabel" class="text-indigo-400">Ready to start</span>
+                <span id="stepPercent" class="text-slate-400">0%</span>
+              </div>
+              <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 w-0 transition-all duration-500"></div>
+              </div>
+            </div>
+
+            <!-- Execution Timeline -->
+            <ul class="text-xs space-y-2.5 pt-2 border-t border-slate-800/80 text-slate-400" id="pipelineTimeline">
+              <li class="flex items-center gap-2" id="step-1">
+                <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                <span>1. Generate Stickman Story Script</span>
+              </li>
+              <li class="flex items-center gap-2" id="step-2">
+                <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                <span>2. Render Vector Stickman Poses & Expressions</span>
+              </li>
+              <li class="flex items-center gap-2" id="step-3">
+                <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                <span>3. Synthesize Voiceover Audio</span>
+              </li>
+              <li class="flex items-center gap-2" id="step-4">
+                <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                <span>4. Assemble 9:16 Short Video with Subtitles</span>
+              </li>
+              <li class="flex items-center gap-2" id="step-5">
+                <span class="w-2 h-2 rounded-full bg-slate-700"></span>
+                <span>5. Auto-Post to YouTube/TikTok/IG</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-6 p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs text-slate-400">
+          <div class="font-semibold text-emerald-400 mb-1">Stickman Generator Architecture:</div>
+          Vector line animation + LLM storytelling script + Text-to-Speech voiceover + Auto-posting API.
+        </div>
+      </div>
+    </div>
+
+    <!-- Generated Shorts Gallery -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Generated Clips & Stickman Videos</h2>
+          <p class="text-xs text-slate-400">Preview generated 9:16 videos, view virality scores, and monitor auto-posting status.</p>
+        </div>
+        <button id="refreshClipsBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700">
+          Refresh Gallery
+        </button>
+      </div>
+
+      <div id="clipsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    Cloudflare Pages Edge Frontend • Vector Stickman Animation Generator
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
