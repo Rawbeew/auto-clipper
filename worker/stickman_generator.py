@@ -2,6 +2,7 @@ import os
 import math
 import json
 import subprocess
+import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
 try:
@@ -18,11 +19,15 @@ class StickmanGenerator:
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
         self.openai_client = OpenAI() if (OpenAI and os.getenv("OPENAI_API_KEY")) else None
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
 
-    def generate_script(self, topic: str) -> dict:
+    def generate_script_with_gemini(self, topic: str) -> dict:
         """
-        Uses LLM to write a viral 30-45s stickman animation script with timed scenes, poses, and narration.
+        Calls Google Gemini REST API to write the stickman narrative script in JSON.
         """
+        if not self.gemini_api_key:
+            return None
+
         prompt = f"""
 You are a viral YouTube Shorts and TikTok stickman animator (like Casually Explained / CGP Grey).
 Write a captivating, fast-paced 30-second stickman video script about: "{topic}".
@@ -39,6 +44,33 @@ Provide a JSON object with:
 
 Format: JSON strictly.
 """
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseMimeType": "application/json"}
+        }).encode("utf-8")
+
+        try:
+            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                text = result["candidates"][0]["content"]["parts"][0]["text"]
+                return json.loads(text)
+        except Exception as e:
+            print(f"Gemini API call skipped/quota limit: {e}")
+            return None
+
+    def generate_script(self, topic: str) -> dict:
+        """
+        Uses Gemini API or OpenAI API to write viral script, with template fallback.
+        """
+        # Try Gemini API first
+        gemini_res = self.generate_script_with_gemini(topic)
+        if gemini_res:
+            return gemini_res
+
+        # Try OpenAI API second
+        prompt = f"Write a 30-second stickman short script about '{topic}' in JSON."
         if self.openai_client:
             try:
                 res = self.openai_client.chat.completions.create(
@@ -54,7 +86,7 @@ Format: JSON strictly.
             except Exception as e:
                 print(f"Error generating LLM script: {e}")
 
-        # Fallback default script if offline or testing without key
+        # Fallback default script
         return {
             "title": f"The Truth About {topic}",
             "scenes": [
@@ -63,7 +95,7 @@ Format: JSON strictly.
                     "duration": 5.0,
                     "narration": f"Have you ever wondered about {topic}? Most people get it completely wrong.",
                     "pose": "confused",
-                    "text_overlay": f"THE TRUTH ABOUT {topic.upper()}",
+                    "text_overlay": f"THE TRUTH ABOUT {topic.upper()[:18]}",
                     "prop": "question_mark"
                 },
                 {
@@ -94,30 +126,22 @@ Format: JSON strictly.
         }
 
     def draw_stickman_frame(self, pose: str, text_overlay: str, prop: str, frame_num: int, width=1080, height=1920) -> Image.Image:
-        """
-        Renders a vector stickman figure on a 1080x1920 canvas with pose & prop graphics.
-        """
-        # Background
         bg_color = (15, 23, 42) # Slate-900 dark theme
         img = Image.new("RGB", (width, height), bg_color)
         draw = ImageDraw.Draw(img)
 
-        # Center position
         cx = width // 2
         cy = height // 2 + 100
 
-        # Animation subtle bobbing effect
         bounce = int(math.sin(frame_num * 0.2) * 12)
         cy += bounce
 
-        # Stickman styling
         stroke_color = (255, 255, 255)
         accent_color = (99, 102, 241) # Indigo
         head_r = 75
         body_len = 220
         line_w = 16
 
-        # Head center
         head_cy = cy - body_len - head_r
 
         # 1. Draw Head
@@ -125,17 +149,13 @@ Format: JSON strictly.
 
         # Facial Expression Eyes
         if pose == "confused":
-            # X eyes
             draw.line([cx - 30, head_cy - 20, cx - 10, head_cy], fill=stroke_color, width=8)
             draw.line([cx - 10, head_cy - 20, cx - 30, head_cy], fill=stroke_color, width=8)
             draw.ellipse([cx + 10, head_cy - 20, cx + 30, head_cy], fill=stroke_color, width=8)
         elif pose == "mind_blown":
-            # Big shocked eyes
             draw.ellipse([cx - 35, head_cy - 25, cx - 15, head_cy - 5], fill=accent_color, outline=stroke_color, width=6)
             draw.ellipse([cx + 15, head_cy - 25, cx + 35, head_cy - 5], fill=accent_color, outline=stroke_color, width=6)
-            # Open mouth
             draw.ellipse([cx - 20, head_cy + 10, cx + 20, head_cy + 40], fill=stroke_color)
-            # Mind blown explosion rays around head
             for angle in range(0, 360, 45):
                 rad = math.radians(angle)
                 x1 = cx + int(math.cos(rad) * (head_r + 20))
@@ -144,10 +164,8 @@ Format: JSON strictly.
                 y2 = head_cy + int(math.sin(rad) * (head_r + 60))
                 draw.line([x1, y1, x2, y2], fill=(244, 63, 94), width=10)
         else:
-            # Standard happy eyes
             draw.ellipse([cx - 30, head_cy - 15, cx - 10, head_cy + 5], fill=stroke_color)
             draw.ellipse([cx + 10, head_cy - 15, cx + 30, head_cy + 5], fill=stroke_color)
-            # Smile
             draw.arc([cx - 25, head_cy + 5, cx + 25, head_cy + 35], start=0, end=180, fill=stroke_color, width=8)
 
         # 2. Draw Body Spine
@@ -155,32 +173,27 @@ Format: JSON strictly.
         spine_top = (cx, head_cy + head_r)
         draw.line([spine_top[0], spine_top[1], spine_bottom[0], spine_bottom[1]], fill=stroke_color, width=line_w)
 
-        # Shoulder & Hip positions
         shoulder_y = spine_top[1] + 40
 
         # 3. Draw Arms & Legs based on Pose
         if pose == "pointing":
-            # Left arm down, Right arm pointing up right
             draw.line([cx, shoulder_y, cx - 100, shoulder_y + 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 180, shoulder_y - 80], fill=stroke_color, width=line_w)
         elif pose == "thinking":
-            # Hand on chin
             draw.line([cx, shoulder_y, cx - 100, shoulder_y + 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 80, shoulder_y + 20], fill=stroke_color, width=line_w)
             draw.line([cx + 80, shoulder_y + 20, cx + 20, head_cy + 20], fill=stroke_color, width=line_w)
         elif pose == "celebrating":
-            # Both arms up in V shape
             draw.line([cx, shoulder_y, cx - 140, shoulder_y - 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 140, shoulder_y - 120], fill=stroke_color, width=line_w)
         elif pose == "mind_blown":
-            # Hands on head
             draw.line([cx, shoulder_y, cx - 100, head_cy], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 100, head_cy], fill=stroke_color, width=line_w)
-        else: # Standard standing / default
+        else:
             draw.line([cx, shoulder_y, cx - 120, shoulder_y + 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 120, shoulder_y + 120], fill=stroke_color, width=line_w)
 
-        # Legs (Standing or running)
+        # Legs
         if pose == "running":
             draw.line([cx, cy, cx - 120, cy + 180], fill=stroke_color, width=line_w)
             draw.line([cx, cy, cx + 140, cy + 140], fill=stroke_color, width=line_w)
@@ -218,9 +231,6 @@ Format: JSON strictly.
         return img
 
     def synthesize_narration(self, text: str, output_mp3: str) -> bool:
-        """
-        Synthesizes TTS voiceover MP3 using OpenAI TTS or Edge TTS / FFmpeg audio.
-        """
         if self.openai_client:
             try:
                 res = self.openai_client.audio.speech.create(
@@ -233,7 +243,6 @@ Format: JSON strictly.
             except Exception as e:
                 print(f"OpenAI TTS error: {e}")
 
-        # Fallback using silent background audio track for local execution
         cmd = [
             "ffmpeg", "-y", "-f", "lavfi",
             "-i", "anullsrc=r=44100:cl=mono",
@@ -243,9 +252,6 @@ Format: JSON strictly.
         return True
 
     def create_stickman_video(self, topic: str) -> str:
-        """
-        Full Pipeline: Script -> Stickman Animation Frames -> TTS Audio -> Final 9:16 MP4
-        """
         print(f"Generating Stickman Animation Video for topic: '{topic}'...")
         script_data = self.generate_script(topic)
 
@@ -257,7 +263,6 @@ Format: JSON strictly.
             duration = scene.get("duration", 5.0)
             total_frames = int(duration * fps)
 
-            # 1. Render frame images for scene
             frame_dir = os.path.join(self.output_dir, f"scene_{scene_num}")
             os.makedirs(frame_dir, exist_ok=True)
 
@@ -271,7 +276,6 @@ Format: JSON strictly.
                 frame_path = os.path.join(frame_dir, f"frame_{f:04d}.png")
                 frame_img.save(frame_path)
 
-            # Render scene MP4 with FFmpeg
             scene_mp4 = os.path.join(self.output_dir, f"scene_{scene_num}.mp4")
             cmd_img = [
                 "ffmpeg", "-y",
@@ -283,11 +287,9 @@ Format: JSON strictly.
             ]
             subprocess.run(cmd_img, check=True)
 
-            # 2. Synthesize scene voiceover TTS
             scene_audio = os.path.join(self.output_dir, f"audio_{scene_num}.mp3")
             self.synthesize_narration(scene["narration"], scene_audio)
 
-            # Combine frame video + audio
             scene_final = os.path.join(self.output_dir, f"scene_final_{scene_num}.mp4")
             cmd_combine = [
                 "ffmpeg", "-y",
@@ -301,7 +303,6 @@ Format: JSON strictly.
             subprocess.run(cmd_combine, check=True)
             scene_files.append(scene_final)
 
-        # Concat all scenes into final video
         concat_list = os.path.join(self.output_dir, "concat.txt")
         with open(concat_list, "w") as f:
             for s_file in scene_files:
