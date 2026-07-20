@@ -4,14 +4,8 @@ pages_build_output_dir = "public"
 
 [vars]
 COMPUTE_WORKER_URL = "https://your-gpu-runner.modal.run"
-
-# Optional Cloudflare R2 bucket for clips storage
-# [[r2_buckets]]
-# binding = "CLIPS_BUCKET"
-# bucket_name = "auto-clipper-videos"
-
-# Optional Cloudflare D1 Database for persistent job history
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "autoclipper_db"
-# database_id = "your-d1-db-id"
+# Cloudflare Zero Trust Access Configuration
+# CF_ACCESS_TEAM_NAME = "your-team-name"
+# CF_ACCESS_POLICY_AUD = "your-app-aud-tag"
+# CF_ACCESS_CLIENT_ID = "your-service-token-id"
+# CF_ACCESS_CLIENT_SECRET = "your-service-token-secret"
