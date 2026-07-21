@@ -22,6 +22,7 @@ from stickman_generator import StickmanGenerator
 from trend_researcher import NicheTrendResearcher
 from longform_generator import LongformNarrativeEngine
 from youtube_algorithm_cracker import YouTubeAlgorithmCracker
+from motion_engine import MotionSkillsManimEngine
 
 downloader = VideoDownloader()
 transcriber = AudioTranscriber()
@@ -32,6 +33,7 @@ stickman_gen = StickmanGenerator()
 trend_researcher = NicheTrendResearcher()
 longform_engine = LongformNarrativeEngine()
 algo_cracker = YouTubeAlgorithmCracker()
+motion_engine = MotionSkillsManimEngine()
 
 def send_telegram_direct_message(text: str):
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8896330204:AAEA7qU8xFs60slVfRwMCJ0971iRVzMV0vg")
@@ -43,7 +45,7 @@ def send_telegram_direct_message(text: str):
     try:
         req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req) as resp:
-            print("📱 Delivered live Telegram trend report!")
+            pass
     except Exception as e:
         print(f"Direct Telegram error: {e}")
 
@@ -106,12 +108,15 @@ def process_pipeline_job(request):
 
         return doc_res
 
-    # MODE C: ANIMATED STICKMAN SHORT
+    # MODE C: ANIMATED STICKMAN SHORT (Casually Explained + Motion-Skills Tier)
     elif mode == "stickman" or (getattr(request, 'ideaPrompt', None) and "stickman" in getattr(request, 'ideaPrompt', '').lower()):
         topic = getattr(request, 'ideaPrompt', None) or "Why do central banks print money"
         algo_data = algo_cracker.optimize_video_for_algorithm(topic, content_type="short")
         ctr_title = algo_data.get("ctr_titles", [topic])[0]
         seo_hashtags = " ".join([f"#{t.replace(' ', '')}" for t in algo_data.get("youtube_seo_tags", ["Shorts", "Viral"])[:6]])
+
+        # Generate Manim motion graphics helper code
+        motion_engine.generate_manim_script(topic)
 
         short_file = stickman_gen.create_stickman_video(topic)
 
