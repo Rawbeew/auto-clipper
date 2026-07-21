@@ -20,9 +20,11 @@ class StickmanGenerator:
     """
     Advanced YouTube-Style Animated Stickman Engine.
     Supports:
-    1. Casually Explained Signature Format (White MS Paint canvas, hand-drawn graphs, deadpan stickman, blue/red arrows)
-    2. Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand, Audience)
-    3. True Crime Noir Vector (Detective Fedora, Magnifying Glass, Crimson Banner)
+    1. Casually Explained Signature MS-Paint Format (Graphs, Option Boxes)
+    2. Tax & Finance Document Simulator (Form 1040 Paper, Green Stamps, Checkboxes)
+    3. Crowd & Audience Reaction Simulator (Cheering Crowd, Speech Bubbles)
+    4. Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand)
+    5. True Crime Noir Vector (Detective Fedora, Magnifying Glass, Crimson Banner)
     Includes HD Edge-TTS Voiceovers & Submagic Yellow Highlighted Captions.
     """
     def __init__(self, output_dir="/tmp/auto_clipper/stickman"):
@@ -33,7 +35,7 @@ class StickmanGenerator:
     def generate_script(self, topic: str) -> dict:
         prompt = f"""
 You are Casually Explained (the famous YouTube animator known for dry, sarcastic MS-Paint style stickman videos).
-Write a deadpan, fast-paced 30-second stickman script explaining or roasting: "{topic}".
+Write a deadpan, fast-paced 30-second stickman script explaining or demonstrating: "{topic}".
 
 Provide a JSON object with:
 1. "title": Short catchy CTR title
@@ -43,7 +45,7 @@ Provide a JSON object with:
    - "duration": float (e.g. 6.0)
    - "narration": Sarcastic, matter-of-fact deadpan spoken text (15-25 words max)
    - "headline": Short 3-5 word headline overlay
-   - "diagram_type": ["graph", "flowchart", "choices", "mind_blown"]
+   - "diagram_type": ["paper_form", "graph", "crowd_reaction", "choices", "mind_blown"]
 
 Format: JSON strictly.
 """
@@ -58,23 +60,23 @@ Format: JSON strictly.
                 {
                     "scene_num": 1,
                     "duration": 6.0,
-                    "narration": f"If you've ever spent more than five minutes thinking about {topic}, congratulations.",
-                    "headline": f"CASUALLY EXPLAINED: {topic.upper()[:16]}",
-                    "diagram_type": "graph"
+                    "narration": f"If you've ever looked at a tax form or financial statement and felt completely lost, you're not alone.",
+                    "headline": f"THE REALITY OF {topic.upper()[:16]}",
+                    "diagram_type": "paper_form"
                 },
                 {
                     "scene_num": 2,
                     "duration": 6.0,
-                    "narration": "You are currently sitting right at the peak of Mount Stupid on the confidence chart.",
+                    "narration": "You are currently sitting right at the peak of Mount Stupid on the confidence vs skill graph.",
                     "headline": "THE CONFIDENCE PARADOX",
                     "diagram_type": "graph"
                 },
                 {
                     "scene_num": 3,
                     "duration": 6.0,
-                    "narration": "Option A is to admit you don't know what you're doing. Option B is to pretend you do.",
-                    "headline": "CHOOSING YOUR PATH",
-                    "diagram_type": "choices"
+                    "narration": "When you share this strategy, everyone in the room realizes you've beaten the system.",
+                    "headline": "CROWD REACTION 📈",
+                    "diagram_type": "crowd_reaction"
                 },
                 {
                     "scene_num": 4,
@@ -87,9 +89,6 @@ Format: JSON strictly.
         }
 
     def synthesize_voiceover(self, text: str, output_mp3: str) -> bool:
-        """
-        Synthesizes deadpan, calm male narration (Edge-TTS en-US-GuyNeural / OpenAI Onyx).
-        """
         if edge_tts:
             try:
                 async def run_edge():
@@ -124,34 +123,36 @@ Format: JSON strictly.
         return True
 
     def draw_casually_explained_frame(self, headline: str, narration_text: str, diagram_type: str, frame_num: int, total_frames: int, width=1080, height=1920) -> Image.Image:
-        """
-        Casually Explained Signature MS-Paint Canvas Renderer:
-        - White background
-        - Black stickman with deadpan facial features
-        - Hand-drawn Dunning-Kruger graphs or MS-Paint option boxes with red/blue indicator arrows
-        - Submagic active word highlighted subtitles
-        """
         bg_color = (255, 255, 255)
         img = Image.new("RGB", (width, height), bg_color)
         draw = ImageDraw.Draw(img)
 
         stroke_color = (15, 23, 42)
         red_accent = (225, 29, 72)
+        green_accent = (34, 197, 94)
         blue_accent = (37, 99, 235)
         line_w = 12
 
         # Stickman
-        cx = 320
+        cx = 300
         cy = height // 2 + 200 + int(math.sin(frame_num * 0.15) * 6)
         head_r = 75
         body_len = 220
         head_cy = cy - body_len - head_r
 
-        # Head & Deadpan Face
+        # Head & Face
         draw.ellipse([cx - head_r, head_cy - head_r, cx + head_r, head_cy + head_r], outline=stroke_color, width=line_w)
         draw.ellipse([cx - 30, head_cy - 10, cx - 10, head_cy + 10], fill=stroke_color)
         draw.ellipse([cx + 10, head_cy - 10, cx + 30, head_cy + 10], fill=stroke_color)
-        draw.line([cx - 20, head_cy + 30, cx + 20, head_cy + 30], fill=stroke_color, width=6)
+        
+        if diagram_type == "paper_form":
+            # Add glasses for Tax Advisor look
+            draw.rectangle([cx - 40, head_cy - 20, cx - 5, head_cy + 15], outline=stroke_color, width=5)
+            draw.rectangle([cx + 5, head_cy - 20, cx + 40, head_cy + 15], outline=stroke_color, width=5)
+            draw.line([cx - 5, head_cy - 5, cx + 5, head_cy - 5], fill=stroke_color, width=5)
+            draw.arc([cx - 25, head_cy + 5, cx + 25, head_cy + 35], start=0, end=180, fill=stroke_color, width=8)
+        else:
+            draw.line([cx - 20, head_cy + 30, cx + 20, head_cy + 30], fill=stroke_color, width=6)
 
         # Spine & Gesturing Arm pointing at diagram
         draw.line([cx, head_cy + head_r, cx, cy], fill=stroke_color, width=line_w)
@@ -164,8 +165,58 @@ Format: JSON strictly.
         draw.line([cx, cy, cx + 70, cy + 220], fill=stroke_color, width=line_w)
 
         # DIAGRAM ON RIGHT
-        if diagram_type == "choices":
-            # Draw Option A & Option B Boxes
+        if diagram_type == "paper_form":
+            fx, fy = 520, height // 2 - 240
+            fw, fh = 480, 620
+
+            draw.rectangle([fx + 15, fy + 15, fx + fw + 15, fy + fh + 15], fill=(203, 213, 225))
+            draw.rectangle([fx, fy, fx + fw, fy + fh], fill=(248, 250, 252), outline=stroke_color, width=8)
+
+            try:
+                font_form = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+                font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+            except:
+                font_form = ImageFont.load_default()
+                font_sm = ImageFont.load_default()
+
+            draw.text((fx + 20, fy + 25), "FORM 1040: TAX RETURN", fill=stroke_color, font=font_form)
+            draw.line([fx + 20, fy + 70, fx + fw - 20, fy + 70], fill=stroke_color, width=4)
+
+            form_lines = [
+                ("Gross Income:", "$250,000"),
+                ("Sec. 179 Deduction:", "-$180,000"),
+                ("S-Corp Salary:", "$50,000"),
+                ("Taxable Balance:", "$20,000")
+            ]
+
+            for idx, (label, val) in enumerate(form_lines):
+                ly = fy + 110 + (idx * 80)
+                draw.rectangle([fx + 25, ly, fx + 55, ly + 30], outline=stroke_color, width=4)
+                draw.line([fx + 25, ly, fx + 55, ly + 30], fill=green_accent, width=5)
+                draw.text((fx + 70, ly), label, fill=stroke_color, font=font_sm)
+                draw.text((fx + 320, ly), val, fill=green_accent if "-" in val else stroke_color, font=font_sm)
+                draw.line([fx + 25, ly + 45, fx + fw - 25, ly + 45], fill=(226, 232, 240), width=2)
+
+            stamp_x, stamp_y = fx + 60, fy + fh - 140
+            draw.rectangle([stamp_x, stamp_y, stamp_x + 360, stamp_y + 80], outline=green_accent, width=8)
+            draw.text((stamp_x + 20, stamp_y + 15), "0% TAX SAVINGS!", fill=green_accent, font=font_form)
+
+        elif diagram_type == "crowd_reaction":
+            for c in range(6):
+                crowd_x = 550 + (c % 3) * 150
+                crowd_y = height // 2 - 100 + (c // 3) * 220 + int(math.sin(frame_num * 0.3 + c) * 10)
+                draw.ellipse([crowd_x - 35, crowd_y - 35, crowd_x + 35, crowd_y + 35], outline=stroke_color, width=6)
+                draw.line([crowd_x, crowd_y + 35, crowd_x, crowd_y + 120], fill=stroke_color, width=6)
+                draw.line([crowd_x, crowd_y + 50, crowd_x - 40, crowd_y], fill=stroke_color, width=6)
+                draw.line([crowd_x, crowd_y + 50, crowd_x + 40, crowd_y], fill=stroke_color, width=6)
+                draw.rectangle([crowd_x - 40, crowd_y - 100, crowd_x + 80, crowd_y - 50], fill=(254, 240, 138), outline=stroke_color, width=3)
+                try:
+                    font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+                except:
+                    font_sm = ImageFont.load_default()
+                draw.text((crowd_x - 30, crowd_y - 90), "WOW!", fill=stroke_color, font=font_sm)
+
+        elif diagram_type == "choices":
             bx1, by1 = 550, height // 2 - 200
             draw.rectangle([bx1, by1, bx1 + 420, by1 + 140], outline=stroke_color, width=8, fill=(241, 245, 249))
             draw.rectangle([bx1, by1 + 220, bx1 + 420, by1 + 360], outline=stroke_color, width=8, fill=(254, 226, 226))
@@ -178,7 +229,7 @@ Format: JSON strictly.
             draw.text((bx1 + 30, by1 + 50), "OPTION A: REASON", fill=stroke_color, font=box_font)
             draw.text((bx1 + 30, by1 + 270), "OPTION B: CHAOS", fill=red_accent, font=box_font)
 
-        else: # Default Graph
+        else: # Graph
             gx, gy = 550, height // 2 - 150
             gw, gh = 440, 480
 
@@ -279,7 +330,7 @@ Format: JSON strictly.
                 frame_img = self.draw_casually_explained_frame(
                     headline=scene.get("headline", ""),
                     narration_text=scene.get("narration", ""),
-                    diagram_type=scene.get("diagram_type", "graph"),
+                    diagram_type=scene.get("diagram_type", "paper_form"),
                     frame_num=f,
                     total_frames=total_frames
                 )
@@ -332,4 +383,4 @@ Format: JSON strictly.
 
 if __name__ == "__main__":
     generator = StickmanGenerator()
-    generator.create_stickman_video("Casually Explained: Quantum Physics")
+    generator.create_stickman_video("3 Legal Tax Secrets Rich People Use")
