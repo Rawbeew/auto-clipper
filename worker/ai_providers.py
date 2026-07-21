@@ -5,9 +5,9 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client for Groq, Cerebras, SambaNova, SiliconFlow, 
-    Anything.com, Gemini, Pollinations.ai, and OpenAI.
-    Provides ultra-fast LPU inference, free FLUX image generation, and speech-to-text.
+    Unified AI Multi-Provider Client optimized for Groq LPU, SiliconFlow, 
+    Cerebras, Gemini 2.0, Anything.com, and OpenAI.
+    Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
         self.groq_key = os.getenv("GROQ_API_KEY")
@@ -17,29 +17,13 @@ class MultiAIProvider:
         self.anything_key = os.getenv("ANYTHING_API_KEY")
         self.gemini_key = os.getenv("GEMINI_API_KEY")
         self.openai_key = os.getenv("OPENAI_API_KEY")
-        self.pexels_key = os.getenv("PEXELS_API_KEY")
 
-    # ----------------------------------------------------
-    # 1. FAST SCRIPT & HIGHLIGHT LLM GENERATION
-    # ----------------------------------------------------
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         """
-        Executes structured JSON completion across available providers in order of speed/credits:
-        Cerebras -> Groq -> SambaNova -> SiliconFlow -> Gemini -> Anything.com -> OpenAI
+        Runs completion using Groq LPU as primary provider, falling back down the stack.
+        Order: Groq Llama 3.3 -> Cerebras -> SiliconFlow -> Gemini -> Anything.com -> OpenAI
         """
-        # 1. Try Cerebras (World's Fastest Llama 3.3 70B @ 2000 tokens/sec)
-        if self.cerebras_key:
-            res = self._call_openai_compatible(
-                url="https://api.cerebras.ai/v1/chat/completions",
-                api_key=self.cerebras_key,
-                model="llama3.3-70b",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
-
-        # 2. Try Groq (Ultra-fast LPU Llama 3.3 / DeepSeek)
+        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B)
         if self.groq_key:
             res = self._call_openai_compatible(
                 url="https://api.groq.com/openai/v1/chat/completions",
@@ -51,19 +35,19 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 3. Try SambaNova (DeepSeek R1 & Llama 3.3 70B)
-        if self.sambanova_key:
+        # 2. Cerebras Cloud
+        if self.cerebras_key:
             res = self._call_openai_compatible(
-                url="https://api.sambanova.ai/v1/chat/completions",
-                api_key=self.sambanova_key,
-                model="Meta-Llama-3.3-70B-Instruct",
+                url="https://api.cerebras.ai/v1/chat/completions",
+                api_key=self.cerebras_key,
+                model="llama3.3-70b",
                 prompt=prompt,
                 system_prompt=system_prompt
             )
             if res:
                 return res
 
-        # 4. Try SiliconFlow (Qwen 2.5 / DeepSeek V3)
+        # 3. SiliconFlow (Qwen 2.5)
         if self.siliconflow_key:
             res = self._call_openai_compatible(
                 url="https://api.siliconflow.cn/v1/chat/completions",
@@ -75,13 +59,13 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 5. Try Gemini (Google)
+        # 4. Gemini 2.0
         if self.gemini_key:
             res = self._call_gemini(prompt, system_prompt)
             if res:
                 return res
 
-        # 6. Try Anything.com
+        # 5. Anything.com
         if self.anything_key:
             res = self._call_openai_compatible(
                 url="https://api.anything.com/v1/chat/completions",
@@ -93,7 +77,7 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 7. Try OpenAI
+        # 6. OpenAI
         if self.openai_key:
             res = self._call_openai_compatible(
                 url="https://api.openai.com/v1/chat/completions",
@@ -107,10 +91,10 @@ class MultiAIProvider:
 
         return None
 
-    # ----------------------------------------------------
-    # 2. ULTRA-FAST AUDIO TRANSCRIPTION (Groq Whisper LPU)
-    # ----------------------------------------------------
     def transcribe_audio_groq(self, audio_filepath: str) -> dict:
+        """
+        Transcribes audio via Groq Whisper LPU in ~2-3 seconds.
+        """
         if not self.groq_key or not os.path.exists(audio_filepath):
             return None
 
@@ -130,20 +114,6 @@ class MultiAIProvider:
             print(f"Groq Whisper transcription skipped: {e}")
             return None
 
-    # ----------------------------------------------------
-    # 3. 100% FREE IMAGE GENERATION (Pollinations.ai / SiliconFlow)
-    # ----------------------------------------------------
-    def generate_image_free(self, prompt: str) -> str:
-        """
-        Generates stickman artwork or B-roll using Pollinations.ai (100% Free, No API key needed) 
-        or SiliconFlow FLUX.1.
-        """
-        # Pollinations.ai (100% Free zero setup)
-        encoded_prompt = urllib.parse.quote(f"minimalist white vector stickman line art on dark background, {prompt}")
-        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1920&nologo=true&seed=42"
-        return pollinations_url
-
-    # Helper methods for REST calls
     def _call_openai_compatible(self, url: str, api_key: str, model: str, prompt: str, system_prompt: str) -> dict:
         payload = json.dumps({
             "model": model,
@@ -155,17 +125,20 @@ class MultiAIProvider:
             "temperature": 0.7
         }).encode("utf-8")
 
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/1.0"
+        }
+
         try:
-            req = urllib.request.Request(url, data=payload, headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            })
+            req = urllib.request.Request(url, data=payload, headers=headers)
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 content = data["choices"][0]["message"]["content"]
                 return json.loads(content)
         except Exception as e:
-            print(f"API provider ({url}) skipped: {e}")
+            print(f"API Provider call ({url}) failed: {e}")
             return None
 
     def _call_gemini(self, prompt: str, system_prompt: str) -> dict:
@@ -175,12 +148,17 @@ class MultiAIProvider:
             "generationConfig": {"responseMimeType": "application/json"}
         }).encode("utf-8")
 
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/1.0"
+        }
+
         try:
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+            req = urllib.request.Request(url, data=payload, headers=headers)
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 text = data["candidates"][0]["content"]["parts"][0]["text"]
                 return json.loads(text)
         except Exception as e:
-            print(f"Gemini API skipped: {e}")
+            print(f"Gemini API failed: {e}")
             return None
