@@ -6,12 +6,20 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client optimized for Groq LPU, Kimi (Moonshot AI), 
-    DeepSeek, Cerebras, SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
+    Unified AI Multi-Provider Client optimized for Anthropic Claude 3.5 Sonnet, 
+    Groq LPU, Kimi, DeepSeek, Cerebras, SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
     Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
         self.providers = [
+            {
+                "name": "Anthropic Claude 3.5 Sonnet",
+                "key": os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"),
+                "url": "https://api.anthropic.com/v1/messages",
+                "model": "claude-3-5-sonnet-20241022",
+                "type": "anthropic",
+                "cooldown_until": 0
+            },
             {
                 "name": "Groq LPU",
                 "key": os.getenv("GROQ_API_KEY"),
@@ -90,7 +98,9 @@ class MultiAIProvider:
 
             print(f"⚡ Attempting completion with provider: '{p['name']}'...")
             
-            if p["type"] == "openai_compatible":
+            if p["type"] == "anthropic":
+                res = self._call_anthropic(p, prompt, system_prompt)
+            elif p["type"] == "openai_compatible":
                 res = self._call_openai_compatible(p, prompt, system_prompt)
             elif p["type"] == "gemini":
                 res = self._call_gemini(p, prompt, system_prompt)
@@ -107,6 +117,33 @@ class MultiAIProvider:
         print("❌ All AI providers exhausted or in cooldown.")
         return None
 
+    def _call_anthropic(self, provider: dict, prompt: str, system_prompt: str) -> dict:
+        payload = json.dumps({
+            "model": provider["model"],
+            "max_tokens": 1000,
+            "system": system_prompt,
+            "messages": [
+                {"role": "user", "content": f"{prompt}\n\nRespond strictly in valid JSON format."}
+            ]
+        }).encode("utf-8")
+
+        headers = {
+            "x-api-key": provider["key"],
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/3.0"
+        }
+
+        try:
+            req = urllib.request.Request(provider["url"], data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                text = data["content"][0]["text"]
+                return json.loads(text)
+        except Exception as e:
+            print(f"Anthropic Claude API call error: {e}")
+            return None
+
     def _call_openai_compatible(self, provider: dict, prompt: str, system_prompt: str) -> dict:
         payload = json.dumps({
             "model": provider["model"],
@@ -121,7 +158,7 @@ class MultiAIProvider:
         headers = {
             "Authorization": f"Bearer {provider['key']}",
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/2.0"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/3.0"
         }
 
         try:
@@ -143,7 +180,7 @@ class MultiAIProvider:
 
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/2.0"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/3.0"
         }
 
         try:
