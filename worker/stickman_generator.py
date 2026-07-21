@@ -5,6 +5,7 @@ import asyncio
 import subprocess
 import urllib.request
 from PIL import Image, ImageDraw, ImageFont
+from character_manager import CharacterManager
 
 try:
     import edge_tts
@@ -18,19 +19,19 @@ except ImportError:
 
 class StickmanGenerator:
     """
-    Advanced YouTube-Style Animated Stickman Engine.
+    Advanced YouTube-Style Animated Stickman Engine with Permanent Mascot Continuity.
     Supports:
-    1. Casually Explained Signature MS-Paint Format (Graphs, Option Boxes)
-    2. Tax & Finance Document Simulator (Form 1040 Paper, Green Stamps, Checkboxes)
-    3. Crowd & Audience Reaction Simulator (Cheering Crowd, Speech Bubbles)
-    4. Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand)
-    5. True Crime Noir Vector (Detective Fedora, Magnifying Glass, Crimson Banner)
+    - Character Manager (Lock onto custom mascot: Tax Advisor, Fedora Detective, Lab Scientist, Crypto Trader)
+    - Casually Explained Signature MS-Paint Format (Graphs, Option Boxes)
+    - Tax & Finance Document Simulator (Form 1040 Paper, Green Stamps, Checkboxes)
+    - Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand)
     Includes HD Edge-TTS Voiceovers & Submagic Yellow Highlighted Captions.
     """
     def __init__(self, output_dir="/tmp/auto_clipper/stickman"):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
         self.ai_provider = MultiAIProvider()
+        self.char_mgr = CharacterManager()
 
     def generate_script(self, topic: str) -> dict:
         prompt = f"""
@@ -133,38 +134,33 @@ Format: JSON strictly.
         blue_accent = (37, 99, 235)
         line_w = 12
 
-        # Stickman
+        # Stickman Position
         cx = 300
         cy = height // 2 + 200 + int(math.sin(frame_num * 0.15) * 6)
         head_r = 75
         body_len = 220
         head_cy = cy - body_len - head_r
 
-        # Head & Face
+        # 1. Head & Face
         draw.ellipse([cx - head_r, head_cy - head_r, cx + head_r, head_cy + head_r], outline=stroke_color, width=line_w)
         draw.ellipse([cx - 30, head_cy - 10, cx - 10, head_cy + 10], fill=stroke_color)
         draw.ellipse([cx + 10, head_cy - 10, cx + 30, head_cy + 10], fill=stroke_color)
-        
-        if diagram_type == "paper_form":
-            # Add glasses for Tax Advisor look
-            draw.rectangle([cx - 40, head_cy - 20, cx - 5, head_cy + 15], outline=stroke_color, width=5)
-            draw.rectangle([cx + 5, head_cy - 20, cx + 40, head_cy + 15], outline=stroke_color, width=5)
-            draw.line([cx - 5, head_cy - 5, cx + 5, head_cy - 5], fill=stroke_color, width=5)
-            draw.arc([cx - 25, head_cy + 5, cx + 25, head_cy + 35], start=0, end=180, fill=stroke_color, width=8)
-        else:
-            draw.line([cx - 20, head_cy + 30, cx + 20, head_cy + 30], fill=stroke_color, width=6)
+        draw.line([cx - 20, head_cy + 30, cx + 20, head_cy + 30], fill=stroke_color, width=6)
 
-        # Spine & Gesturing Arm pointing at diagram
+        # 2. Draw Permanent Locked Mascot Accessories (Glasses, Ties, Hats, Goggles)
+        self.char_mgr.draw_locked_accessories(draw, cx, head_cy, head_r, stroke_color)
+
+        # 3. Spine & Gesturing Arm pointing at diagram
         draw.line([cx, head_cy + head_r, cx, cy], fill=stroke_color, width=line_w)
         shoulder_y = head_cy + head_r + 40
         draw.line([cx, shoulder_y, cx - 80, shoulder_y + 100], fill=stroke_color, width=line_w)
         draw.line([cx, shoulder_y, cx + 180, shoulder_y - 40], fill=stroke_color, width=line_w)
 
-        # Legs
+        # 4. Legs
         draw.line([cx, cy, cx - 70, cy + 220], fill=stroke_color, width=line_w)
         draw.line([cx, cy, cx + 70, cy + 220], fill=stroke_color, width=line_w)
 
-        # DIAGRAM ON RIGHT
+        # 5. DIAGRAM ON RIGHT
         if diagram_type == "paper_form":
             fx, fy = 520, height // 2 - 240
             fw, fh = 480, 620

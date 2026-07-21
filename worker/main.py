@@ -22,7 +22,7 @@ from stickman_generator import StickmanGenerator
 from trend_researcher import NicheTrendResearcher
 from longform_generator import LongformNarrativeEngine
 from youtube_algorithm_cracker import YouTubeAlgorithmCracker
-from motion_engine import MotionSkillsManimEngine
+from character_manager import CharacterManager
 
 downloader = VideoDownloader()
 transcriber = AudioTranscriber()
@@ -33,7 +33,7 @@ stickman_gen = StickmanGenerator()
 trend_researcher = NicheTrendResearcher()
 longform_engine = LongformNarrativeEngine()
 algo_cracker = YouTubeAlgorithmCracker()
-motion_engine = MotionSkillsManimEngine()
+char_mgr = CharacterManager()
 
 def send_telegram_direct_message(text: str):
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8896330204:AAEA7qU8xFs60slVfRwMCJ0971iRVzMV0vg")
@@ -55,8 +55,24 @@ def process_pipeline_job(request):
     print(f"=== Starting Algorithmic Job: {jobId} (Mode: {mode}) ===")
     rendered_shorts = []
 
-    # MODE A: TREND RESEARCH
-    if mode == "research":
+    # MODE A: CHARACTER LOCKING
+    if mode == "character":
+        char_choice = getattr(request, 'ideaPrompt', None) or getattr(request, 'videoUrl', 'tax_advisor') or "tax_advisor"
+        res = char_mgr.set_locked_character(char_choice)
+        active_name = res["character_data"]["name"]
+        desc = res["character_data"]["description"]
+
+        msg = (
+            f"🔒 *MASCOT CHARACTER PERMANENTLY LOCKED!*\n\n"
+            f"👤 *Active Character:* `{active_name}`\n"
+            f"📝 *Description:* {desc}\n\n"
+            f"_Every video generated from now on will feature this exact mascot character!_"
+        )
+        send_telegram_direct_message(msg)
+        return res
+
+    # MODE B: TREND RESEARCH
+    elif mode == "research":
         niche_key = getattr(request, 'niche', 'saas_tech') or "saas_tech"
         report = trend_researcher.research_niche_trends(niche_key)
         ideas = report.get("viral_research_ideas", [])
@@ -75,7 +91,7 @@ def process_pipeline_job(request):
         send_telegram_direct_message(formatted_msg)
         return report
 
-    # MODE B: LONG-FORM DOCUMENTARY GENERATOR
+    # MODE C: LONG-FORM DOCUMENTARY GENERATOR
     elif mode == "longform":
         topic = getattr(request, 'ideaPrompt', None) or "The History of Artificial Intelligence"
         target_minutes = getattr(request, 'targetMinutes', 15)
@@ -108,15 +124,12 @@ def process_pipeline_job(request):
 
         return doc_res
 
-    # MODE C: ANIMATED STICKMAN SHORT (Casually Explained + Motion-Skills Tier)
+    # MODE D: ANIMATED STICKMAN SHORT
     elif mode == "stickman" or (getattr(request, 'ideaPrompt', None) and "stickman" in getattr(request, 'ideaPrompt', '').lower()):
         topic = getattr(request, 'ideaPrompt', None) or "Why do central banks print money"
         algo_data = algo_cracker.optimize_video_for_algorithm(topic, content_type="short")
         ctr_title = algo_data.get("ctr_titles", [topic])[0]
         seo_hashtags = " ".join([f"#{t.replace(' ', '')}" for t in algo_data.get("youtube_seo_tags", ["Shorts", "Viral"])[:6]])
-
-        # Generate Manim motion graphics helper code
-        motion_engine.generate_manim_script(topic)
 
         short_file = stickman_gen.create_stickman_video(topic)
 
@@ -144,7 +157,7 @@ def process_pipeline_job(request):
             "publishResults": publish_results
         })
 
-    # MODE D: LONG VIDEO CLIPPING
+    # MODE E: LONG VIDEO CLIPPING
     else:
         video_url = getattr(request, 'videoUrl', None)
         topic = video_url or getattr(request, 'ideaPrompt', 'AI Trends')
@@ -187,7 +200,7 @@ def process_pipeline_job(request):
                 "publishResults": publish_results
             })
 
-    print(f"\n✅ SUCCESS: Completed Job {jobId}.")
+    print(f"\n✅ SUCCESS: Completed Algorithmic Job {jobId}.")
     return rendered_shorts
 
 class SimpleRequest:
@@ -206,14 +219,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AutoClipper CLI Runner")
     parser.add_argument("--url", type=str, help="Source long video URL")
     parser.add_argument("--topic", type=str, help="Idea prompt or topic")
+    parser.add_argument("--character", type=str, help="Character ID to lock permanently")
     parser.add_argument("--stickman", action="store_true", help="Enable Stickman Animation mode")
     parser.add_argument("--longform", action="store_true", help="Enable Longform mode")
     parser.add_argument("--minutes", type=int, default=15, help="Target longform duration")
     parser.add_argument("--research", type=str, help="Niche name to research trends")
-    parser.add_argument("--issue-text", type=str, help="Raw GitHub issue text")
     args = parser.parse_args()
 
-    if args.research:
+    if args.character:
+        req = SimpleRequest(mode="character", ideaPrompt=args.character, jobId=f"gh_char_{int(time.time())}")
+        process_pipeline_job(req)
+    elif args.research:
         req = SimpleRequest(mode="research", niche=args.research, jobId=f"gh_research_{int(time.time())}")
         process_pipeline_job(req)
     elif args.longform:

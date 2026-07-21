@@ -4,20 +4,22 @@ import json
 import urllib.request
 import subprocess
 from trend_researcher import NicheTrendResearcher
+from character_manager import CharacterManager
 
 class TelegramBotListener:
     """
     Two-Way Interactive Telegram Bot Engine.
-    Features:
-    - /trending [niche] : Scrapes real-time trending content ideas for any niche.
-    - /make <prompt>   : Generates 30s stickman video & delivers MP4 + tags package.
-    - /longform <topic>: Generates 15-35 min documentary + auto-extracts 3 shorts.
-    - Raw YouTube Link : Clips horizontal videos into vertical 9:16 shorts.
+    Commands:
+    - /character <name> : Locks onto custom mascot character (tax_advisor, detective_noir, scientist_lab, crypto_trader, casually_explained)
+    - /trending [niche]  : Scrapes real-time trending content ideas.
+    - /make <prompt>    : Generates 30s stickman short MP4.
+    - /longform <topic> : Generates 15-35 min documentary.
     """
     def __init__(self, token: str = None):
         self.token = token or os.getenv("TELEGRAM_BOT_TOKEN")
         self.offset = 0
         self.trend_researcher = NicheTrendResearcher()
+        self.char_mgr = CharacterManager()
 
     def send_message(self, chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
         if not self.token:
@@ -43,12 +45,20 @@ class TelegramBotListener:
             welcome_msg = (
                 "🤖 *AutoClipper Interactive AI Studio Bot*\n\n"
                 "Send me any command or text prompt to generate video packages instantly:\n\n"
-                "🔥 *Get Trending Ideas:* `/trending saas_tech`, `/trending true_crime`, `/trending finance`, `/trending legal`\n"
+                "🔒 *Lock Character Mascot:* `/character tax_advisor` (Options: `tax_advisor`, `detective_noir`, `scientist_lab`, `crypto_trader`, `casually_explained`)\n"
+                "🔥 *Get Trending Ideas:* `/trending saas_tech` or `/trending true_crime`\n"
                 "🎨 *Create Stickman Short:* `/make Why central banks print money`\n"
                 "📹 *Create 15-35 Min Longform:* `/longform The Rise of AI Startups`\n"
                 "🔗 *Clip Long Video:* Just paste any YouTube URL link directly in chat!\n"
             )
             self.send_message(chat_id, welcome_msg)
+
+        elif text.startswith("/character"):
+            char_choice = text.replace("/character", "").strip() or "tax_advisor"
+            res = self.char_mgr.set_locked_character(char_choice)
+            active_name = res["character_data"]["name"]
+            desc = res["character_data"]["description"]
+            self.send_message(chat_id, f"🔒 *MASCOT CHARACTER PERMANENTLY LOCKED!*\n\n👤 *Active Character:* `{active_name}`\n📝 *Features:* {desc}\n\n_All future videos generated will feature this exact locked character mascot!_")
 
         elif text.startswith("/trending") or text.startswith("/ideas"):
             parts = text.split(maxsplit=1)
@@ -70,7 +80,7 @@ class TelegramBotListener:
                         f"🚀 *Quick Trigger:* `/make {idea.get('concept_title', '')}`\n\n"
                     )
 
-                formatted_msg += "👉 *Copy any quick trigger command above and reply in chat to generate the video!*"
+                formatted_msg += "👉 *Copy any quick trigger line above and reply in chat to generate the video!*"
                 self.send_message(chat_id, formatted_msg)
 
             except Exception as e:
