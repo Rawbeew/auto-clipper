@@ -6,9 +6,9 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Resilient, Rate-Limit-Proof Auto-Switching Multi-Provider Architecture.
-    Tracks provider health states and instantly fails over upon 429 Rate Limits or Quota Errors.
-    Supported Engines: Groq LPU, Cerebras, DeepSeek, SiliconFlow, Gemini 2.0, Anything.com, OpenRouter, and OpenAI.
+    Unified AI Multi-Provider Client optimized for Groq LPU, Kimi (Moonshot AI), 
+    DeepSeek, Cerebras, SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
+    Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
         self.providers = [
@@ -17,6 +17,14 @@ class MultiAIProvider:
                 "key": os.getenv("GROQ_API_KEY"),
                 "url": "https://api.groq.com/openai/v1/chat/completions",
                 "model": "llama-3.3-70b-versatile",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "Kimi Moonshot AI",
+                "key": os.getenv("KIMI_API_KEY"),
+                "url": "https://api.moonshot.ai/v1/chat/completions",
+                "model": "kimi-k2.6",
                 "type": "openai_compatible",
                 "cooldown_until": 0
             },
@@ -71,17 +79,13 @@ class MultiAIProvider:
         ]
 
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
-        """
-        Attempts execution across all active non-cooldown providers.
-        Instantly auto-switches on 429, 402, or 500 errors.
-        """
         now = time.time()
         for p in self.providers:
             if not p["key"]:
                 continue
 
             if p["cooldown_until"] > now:
-                print(f"⏳ Provider '{p['name']}' is in rate-limit cooldown. Auto-switching to next...")
+                print(f"⏳ Provider '{p['name']}' in rate-limit cooldown. Switching to next...")
                 continue
 
             print(f"⚡ Attempting completion with provider: '{p['name']}'...")
@@ -97,7 +101,6 @@ class MultiAIProvider:
                 print(f"✅ Success from provider: '{p['name']}'")
                 return res
             else:
-                # Mark provider in 60-second cooldown on error
                 p["cooldown_until"] = time.time() + 60
                 print(f"⚠️ Provider '{p['name']}' failed/rate-limited. Auto-switching to next provider...")
 

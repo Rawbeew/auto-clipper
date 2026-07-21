@@ -49,6 +49,7 @@ jobs:
       - name: Run AutoClipper Pipeline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
@@ -77,7 +78,6 @@ jobs:
           echo "Processing Payload: $INPUT_TEXT | Mode: $MODE"
           echo "==============================================="
 
-          # If mode is research or input contains "ideas" or "trending"
           LOWER_INPUT=$(echo "$INPUT_TEXT" | tr '[:upper:]' '[:lower:]')
           if [ "$MODE" = "research" ] || [[ "$LOWER_INPUT" == *"ideas"* ]] || [[ "$LOWER_INPUT" == *"trending"* ]]; then
             python worker/main.py --research "saas_tech"
