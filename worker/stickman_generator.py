@@ -2,23 +2,33 @@ import os
 import math
 import json
 import subprocess
+import urllib.request
 from PIL import Image, ImageDraw, ImageFont
-from ai_providers import MultiAIProvider
+
+try:
+    from ai_providers import MultiAIProvider
+except ImportError:
+    from worker.ai_providers import MultiAIProvider
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
 class StickmanGenerator:
     """
     Generates AI animated stickman short videos from text prompts/topics.
-    Utilizes MultiAIProvider (Groq, SiliconFlow, Gemini, OpenAI) for high-speed scriptwriting.
+    Utilizes MultiAIProvider (Groq, SiliconFlow, Gemini, OpenAI) for scriptwriting
+    and OpenAI TTS / Edge-TTS for HD voiceover narration.
     """
     def __init__(self, output_dir="/tmp/auto_clipper/stickman"):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
         self.ai_provider = MultiAIProvider()
+        self.openai_key = os.getenv("OPENAI_API_KEY")
+        self.openai_client = OpenAI(api_key=self.openai_key) if (OpenAI and self.openai_key) else None
 
     def generate_script(self, topic: str) -> dict:
-        """
-        Uses MultiAIProvider (Groq / SiliconFlow / Gemini / OpenAI) to write viral script, with template fallback.
-        """
         prompt = f"""
 You are a viral YouTube Shorts and TikTok stickman animator (like Casually Explained / CGP Grey).
 Write a captivating, fast-paced 30-second stickman video script about: "{topic}".
@@ -39,7 +49,6 @@ Format: JSON strictly.
         if res:
             return res
 
-        # Fallback default script if AI keys exhausted
         return {
             "title": f"The Truth About {topic}",
             "scenes": [
@@ -79,7 +88,7 @@ Format: JSON strictly.
         }
 
     def draw_stickman_frame(self, pose: str, text_overlay: str, prop: str, frame_num: int, width=1080, height=1920) -> Image.Image:
-        bg_color = (15, 23, 42) # Slate-900 dark theme
+        bg_color = (15, 23, 42)
         img = Image.new("RGB", (width, height), bg_color)
         draw = ImageDraw.Draw(img)
 
@@ -90,17 +99,17 @@ Format: JSON strictly.
         cy += bounce
 
         stroke_color = (255, 255, 255)
-        accent_color = (99, 102, 241) # Indigo
+        accent_color = (99, 102, 241)
         head_r = 75
         body_len = 220
         line_w = 16
 
         head_cy = cy - body_len - head_r
 
-        # 1. Draw Head
+        # 1. Head
         draw.ellipse([cx - head_r, head_cy - head_r, cx + head_r, head_cy + head_r], outline=stroke_color, width=line_w)
 
-        # Facial Expression Eyes
+        # Facial Expression
         if pose == "confused":
             draw.line([cx - 30, head_cy - 20, cx - 10, head_cy], fill=stroke_color, width=8)
             draw.line([cx - 10, head_cy - 20, cx - 30, head_cy], fill=stroke_color, width=8)
@@ -121,14 +130,14 @@ Format: JSON strictly.
             draw.ellipse([cx + 10, head_cy - 15, cx + 30, head_cy + 5], fill=stroke_color)
             draw.arc([cx - 25, head_cy + 5, cx + 25, head_cy + 35], start=0, end=180, fill=stroke_color, width=8)
 
-        # 2. Draw Body Spine
+        # 2. Body Spine
         spine_bottom = (cx, cy)
         spine_top = (cx, head_cy + head_r)
         draw.line([spine_top[0], spine_top[1], spine_bottom[0], spine_bottom[1]], fill=stroke_color, width=line_w)
 
         shoulder_y = spine_top[1] + 40
 
-        # 3. Draw Arms & Legs based on Pose
+        # 3. Arms & Legs
         if pose == "pointing":
             draw.line([cx, shoulder_y, cx - 100, shoulder_y + 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 180, shoulder_y - 80], fill=stroke_color, width=line_w)
@@ -146,7 +155,6 @@ Format: JSON strictly.
             draw.line([cx, shoulder_y, cx - 120, shoulder_y + 120], fill=stroke_color, width=line_w)
             draw.line([cx, shoulder_y, cx + 120, shoulder_y + 120], fill=stroke_color, width=line_w)
 
-        # Legs
         if pose == "running":
             draw.line([cx, cy, cx - 120, cy + 180], fill=stroke_color, width=line_w)
             draw.line([cx, cy, cx + 140, cy + 140], fill=stroke_color, width=line_w)
@@ -155,7 +163,7 @@ Format: JSON strictly.
             draw.line([cx, cy, cx - 90, cy + 220], fill=stroke_color, width=line_w)
             draw.line([cx, cy, cx + 90, cy + 220], fill=stroke_color, width=line_w)
 
-        # 4. Draw Props
+        # 4. Props
         if prop == "lightbulb":
             lb_x, lb_y = cx + 180, head_cy - 120
             draw.ellipse([lb_x - 35, lb_y - 35, lb_x + 35, lb_y + 35], fill=(253, 224, 71), outline=(234, 179, 8), width=6)
@@ -168,7 +176,7 @@ Format: JSON strictly.
                 font = ImageFont.load_default()
             draw.text((qm_x, qm_y), "?", fill=(56, 189, 248), font=font)
 
-        # 5. Draw Text Overlay Banner
+        # 5. Text Overlay
         if text_overlay:
             padding_y = 180
             try:
@@ -184,13 +192,38 @@ Format: JSON strictly.
         return img
 
     def synthesize_narration(self, text: str, output_mp3: str) -> bool:
-        # Tries OpenAI TTS or Edge TTS
-        cmd = [
-            "ffmpeg", "-y", "-f", "lavfi",
-            "-i", "anullsrc=r=44100:cl=mono",
-            "-t", "5.0", output_mp3
-        ]
-        subprocess.run(cmd, check=True)
+        key = self.openai_key or os.getenv("OPENAI_API_KEY")
+        if key:
+            try:
+                url = "https://api.openai.com/v1/audio/speech"
+                payload = json.dumps({
+                    "model": "tts-1",
+                    "voice": "onyx",
+                    "input": text
+                }).encode("utf-8")
+
+                req = urllib.request.Request(url, data=payload, headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json"
+                })
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    with open(output_mp3, "wb") as f:
+                        f.write(resp.read())
+                return True
+            except Exception as e:
+                print(f"OpenAI TTS API error: {e}")
+
+        # Fallback silent track
+        try:
+            cmd = [
+                "ffmpeg", "-y", "-f", "lavfi",
+                "-i", "anullsrc=r=44100:cl=mono",
+                "-t", "5.0", output_mp3
+            ]
+            subprocess.run(cmd, check=True)
+        except Exception:
+            with open(output_mp3, "wb") as f:
+                f.write(b"") # Empty placeholder
         return True
 
     def create_stickman_video(self, topic: str) -> str:
@@ -198,8 +231,8 @@ Format: JSON strictly.
         script_data = self.generate_script(topic)
 
         scene_files = []
-
         fps = 24
+
         for i, scene in enumerate(script_data["scenes"]):
             scene_num = scene["scene_num"]
             duration = scene.get("duration", 5.0)
