@@ -8,6 +8,7 @@ class NicheTrendResearcher:
     Scrapes real-time signals from Google News RSS, HackerNews, and Subreddits
     and analyzes them using LLMs (Groq LPU / DeepSeek) for high-RPM virality potential.
     Features pre-configured high-paying low-competition presets:
+    - true_crime ($10-$22 CPM) 🔍 NEW
     - legal_tax ($15-$40 CPM)
     - saas_tech ($14-$35 CPM)
     - engineering ($10-$25 CPM)
@@ -61,11 +62,13 @@ class NicheTrendResearcher:
 
         return stories
 
-    def research_niche_trends(self, niche: str = "saas_tech") -> dict:
-        print(f"🔍 Scraping live viral trends for High-RPM Niche: '{niche}'...")
+    def research_niche_trends(self, niche: str = "true_crime") -> dict:
+        print(f"🔍 Scraping live viral trends for Niche: '{niche}'...")
         
         raw_signals = []
-        if niche.lower() in ["legal_tax", "legal", "tax"]:
+        if niche.lower() in ["true_crime", "crime", "mystery", "heist"]:
+            raw_signals.extend(self.fetch_google_news_trends("unsolved mystery heist cold case investigation"))
+        elif niche.lower() in ["legal_tax", "legal", "tax"]:
             raw_signals.extend(self.fetch_google_news_trends("tax loopholes tax law business"))
         elif niche.lower() in ["saas_tech", "saas", "ai_agents"]:
             raw_signals.extend(self.fetch_hackernews_trends(limit=5))
@@ -78,7 +81,7 @@ class NicheTrendResearcher:
             raw_signals.extend(self.fetch_google_news_trends(niche))
 
         prompt = f"""
-You are a top YouTube strategist specializing in high-RPM faceless channels ($15-$40 CPM niches).
+You are a top YouTube strategist specializing in high-retention True Crime, Mystery, and Educational documentary channels.
 Analyze these real-time trending web signals for the niche: "{niche}".
 
 Trending Signals:
@@ -90,12 +93,12 @@ Specify for each concept whether it works better as a "Short (9:16)", "Longform 
 Respond strictly in valid JSON format with root key "viral_research_ideas", containing:
 - "concept_title": High CTR title
 - "recommended_format": "Short (9:16)" OR "Longform (16:9)" OR "Dual Flywheel"
-- "estimated_cpm_range": e.g. "$18 - $35 CPM"
+- "estimated_cpm_range": e.g. "$12 - $24 CPM"
 - "virality_score": Integer 0-100
-- "hook_angle": Psychological hook angle
+- "hook_angle": Psychological mystery hook angle
 - "script_prompt": Ready-to-use prompt for auto-generation
 """
-        res = self.ai_provider.generate_json(prompt, system_prompt="You are an expert high-RPM YouTube channel strategist. Respond strictly in JSON.")
+        res = self.ai_provider.generate_json(prompt, system_prompt="You are an expert viral True Crime & Documentary strategist. Respond strictly in JSON.")
         if res:
             return res
 
@@ -103,25 +106,25 @@ Respond strictly in valid JSON format with root key "viral_research_ideas", cont
             "niche": niche,
             "viral_research_ideas": [
                 {
-                    "concept_title": "How 1-Person AI Startups Are Reaching $10M ARR",
+                    "concept_title": "The $100M Diamond Heist That Vanished Without A Trace",
                     "recommended_format": "Dual Flywheel",
-                    "estimated_cpm_range": "$18 - $35 CPM",
-                    "virality_score": 98,
-                    "hook_angle": "B2B Success Secrets",
-                    "script_prompt": "Explain how modern AI micro-SaaS solo founders build automated 8-figure companies with stickman animations."
+                    "estimated_cpm_range": "$12 - $22 CPM",
+                    "virality_score": 99,
+                    "hook_angle": "Unsolved Crime Mystery",
+                    "script_prompt": "Explain the Antwerp Diamond Center heist with a noir stickman detective investigating the vault."
                 },
                 {
-                    "concept_title": "3 Legal Tax Secrets Rich People Use (100% Legal)",
+                    "concept_title": "The Cipher No FBI Agent Could Ever Crack",
                     "recommended_format": "Longform (16:9)",
-                    "estimated_cpm_range": "$20 - $45 CPM",
-                    "virality_score": 96,
-                    "hook_angle": "Myth Debunked",
-                    "script_prompt": "Explain tax deductions, S-Corp structures, and trust setups using clear animated stickman host visuals."
+                    "estimated_cpm_range": "$10 - $20 CPM",
+                    "virality_score": 97,
+                    "hook_angle": "Cryptic Mystery",
+                    "script_prompt": "Animate a 15-minute documentary investigating the Kryptos CIA sculpture code and unsolved historical ciphers."
                 }
             ]
         }
 
 if __name__ == "__main__":
     researcher = NicheTrendResearcher()
-    results = researcher.research_niche_trends("saas_tech")
+    results = researcher.research_niche_trends("true_crime")
     print(json.dumps(results, indent=2))

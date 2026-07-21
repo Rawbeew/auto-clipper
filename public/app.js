@@ -19,36 +19,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let generatedClips = [
     {
+      id: "crime-101",
+      title: "The $100M Antwerp Diamond Heist That Vanished",
+      type: "True Crime Vertical Short ($22 CPM)",
+      viralityScore: 99,
+      duration: "00:48",
+      aspectRatio: "9:16",
+      hookText: "How 5 thieves bypassed a $10M vault without setting off a single sensor...",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      hashtags: "#TrueCrime #UnsolvedMystery #Heist #Shorts #FYP #Noir",
+      platforms: {
+        telegram: { status: "sent" },
+        discord: { status: "sent" }
+      },
+      createdAt: "5 mins ago"
+    },
+    {
       id: "doc-101",
       title: "How 1-Person AI Startups Reach $10M ARR",
       type: "15-Min High-RPM Longform ($25 CPM)",
-      viralityScore: 99,
+      viralityScore: 98,
       duration: "15:42",
       aspectRatio: "16:9",
-      hookText: "Chapters: 00:00 The Rise | 03:15 Tech Stack | 07:30 Agent Workflows | 11:45 Monetization | 14:10 The Future",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      hookText: "Chapters: 00:00 The Rise | 03:15 Tech Stack | 07:30 Agent Workflows | 11:45 Monetization",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
       hashtags: "#AIAgents #SaaS #BuildInPublic #Tech #Documentary",
       platforms: {
         telegram: { status: "sent" },
         discord: { status: "sent" }
       },
-      createdAt: "10 mins ago"
-    },
-    {
-      id: "short-101",
-      title: "3 Legal Tax Loopholes Rich People Use Daily",
-      type: "High-RPM Vertical Short ($35 CPM)",
-      viralityScore: 97,
-      duration: "00:44",
-      aspectRatio: "9:16",
-      hookText: "Why paying yourself in dividends saves 15% in taxes legally",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      hashtags: "#TaxSecrets #PersonalFinance #Shorts #FYP #Wealth",
-      platforms: {
-        telegram: { status: "sent" },
-        discord: { status: "sent" }
-      },
-      createdAt: "20 mins ago"
+      createdAt: "15 mins ago"
     }
   ];
 
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnLongMode.addEventListener('click', () => {
     activeFormat = 'longform';
-    btnLongMode.className = "p-3 rounded-xl border border-emerald-500 bg-emerald-600/20 text-emerald-300 font-bold text-xs flex flex-col items-center justify-center gap-1 transition shadow";
+    btnLongMode.className = "p-3 rounded-xl border border-rose-500 bg-rose-600/20 text-rose-300 font-bold text-xs flex flex-col items-center justify-center gap-1 transition shadow";
     btnShortMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
     btnDualMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
     longformDurationBox.classList.remove('hidden');
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   nichePreset.addEventListener('change', () => {
     const val = nichePreset.value;
     const presets = {
+      "true_crime": "The $100M Antwerp Diamond Center heist: How 5 thieves bypassed a $10M vault without setting off alarms...",
       "saas_tech": "How 1-person AI startups build $10M ARR SaaS products with automated AI agents...",
       "legal_tax": "3 unusual tax loopholes rich entrepreneurs use to legally pay 0% capital gains...",
       "engineering": "The $500M engineering mistake that destroyed the world's most expensive bridge...",
@@ -112,13 +113,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.ideas && data.ideas.length > 0) {
         const topIdea = data.ideas[0];
         topicInput.value = topIdea.script_prompt || topIdea.concept_title;
-        alert(`📈 Live Web Research Complete!\n\nTop Trend Concept: "${topIdea.concept_title}"\nVirality Score: ${topIdea.virality_score}/100\nHook Angle: ${topIdea.hook_angle}`);
+        alert(`📈 Live Web Research Complete!\n\nTop Concept: "${topIdea.concept_title}"\nVirality Score: ${topIdea.virality_score}/100\nHook Angle: ${topIdea.hook_angle}`);
       }
     } catch (err) {
       console.error("Research error:", err);
     } finally {
       researchBtn.disabled = false;
-      researchBtn.innerHTML = "<span>🔍 Research Niche Trends</span>";
+      researchBtn.innerHTML = "<span>🔍 Scrape Case & Niche Trends</span>";
     }
   });
 
@@ -137,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="relative bg-black ${clip.aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[9/16]'} max-h-80 overflow-hidden flex items-center justify-center group">
           <video src="${clip.videoUrl}" controls class="w-full h-full object-cover"></video>
           
-          <div class="absolute top-3 left-3 bg-emerald-600/90 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
+          <div class="absolute top-3 left-3 bg-rose-600/90 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
             Score: ${clip.viralityScore}/100
           </div>
 
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
           <div>
-            <div class="flex items-center justify-between text-[11px] font-semibold text-emerald-400 mb-1">
+            <div class="flex items-center justify-between text-[11px] font-semibold text-rose-400 mb-1">
               <span>${clip.type}</span>
               <span class="text-slate-400 font-mono">${clip.aspectRatio}</span>
             </div>
@@ -172,14 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   generateBtn.addEventListener('click', async () => {
-    const topic = topicInput.value.trim() || "How 1-person AI startups build $10M ARR SaaS products";
+    const topic = topicInput.value.trim() || "The $100M Antwerp Diamond Center Heist";
 
     generateBtn.disabled = true;
     generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
     const jobBadge = document.getElementById('jobBadge');
     jobBadge.textContent = "Processing";
-    jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse";
+    jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse";
 
     try {
       const payload = {
@@ -215,13 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const stepPercent = document.getElementById('stepPercent');
 
     const steps = format === 'short' ? [
-      { num: 1, text: "Groq LPU Llama 3.3 scriptwriting...", pct: 20 },
-      { num: 2, text: "Vector stickman pose & prop drawing...", pct: 40 },
-      { num: 3, text: "OpenAI Onyx Voiceover TTS synthesis...", pct: 60 },
-      { num: 4, text: "Submagic subtitle formatting & SEO tags...", pct: 80 },
-      { num: 5, text: "Delivering finished short MP4 to Telegram & Discord...", pct: 100 }
+      { num: 1, text: "Groq LPU True Crime scriptwriting...", pct: 20 },
+      { num: 2, text: "Noir detective stickman pose drawing...", pct: 40 },
+      { num: 3, text: "OpenAI Onyx deep voice narration synthesis...", pct: 60 },
+      { num: 4, text: "Crimson banner formatting & SEO hashtags...", pct: 80 },
+      { num: 5, text: "Delivering True Crime short package to Telegram & Discord...", pct: 100 }
     ] : [
-      { num: 1, text: "5-Chapter 15-35 min scriptwriting via Groq LPU...", pct: 20 },
+      { num: 1, text: "5-Chapter 15-35 min mystery script via Groq LPU...", pct: 20 },
       { num: 2, text: "Multi-character 16:9 scene rendering & B-roll...", pct: 40 },
       { num: 3, text: "Multi-voice narration & YouTube chapter timestamps...", pct: 60 },
       { num: 4, text: "Auto-extracting 3 promo shorts (9:16)...", pct: 80 },
@@ -240,11 +241,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 1; i <= 5; i++) {
           const el = document.getElementById(`step-${i}`);
           if (i < currentStep) {
-            el.className = "flex items-center gap-2 text-emerald-400 font-medium";
-            el.querySelector('span').className = "w-2 h-2 rounded-full bg-emerald-400";
+            el.className = "flex items-center gap-2 text-rose-400 font-medium";
+            el.querySelector('span').className = "w-2 h-2 rounded-full bg-rose-400";
           } else if (i === currentStep) {
-            el.className = "flex items-center gap-2 text-emerald-300 font-semibold pulse-step";
-            el.querySelector('span').className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
+            el.className = "flex items-center gap-2 text-rose-300 font-semibold pulse-step";
+            el.querySelector('span').className = "w-2 h-2 rounded-full bg-rose-400 animate-ping";
           } else {
             el.className = "flex items-center gap-2 text-slate-500";
             el.querySelector('span').className = "w-2 h-2 rounded-full bg-slate-700";
@@ -256,18 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(pollInterval);
         
         jobBadge.textContent = "Delivered";
-        jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30";
         stepLabel.textContent = "Done! Video package delivered to Telegram & Discord.";
 
         generatedClips.unshift({
-          id: `vid-${Date.now()}`,
+          id: `crime-${Date.now()}`,
           title: topicName.length > 35 ? topicName.substring(0, 35) + "..." : topicName,
-          type: format === 'short' ? "High-RPM Vertical Short ($35 CPM)" : `${targetMinutesSelect.value}-Min Longform ($25 CPM)`,
-          viralityScore: 98,
-          duration: format === 'short' ? "00:45" : `${targetMinutesSelect.value}:00`,
+          type: format === 'short' ? "True Crime Vertical Short ($22 CPM)" : `${targetMinutesSelect.value}-Min Noir Documentary ($20 CPM)`,
+          viralityScore: 99,
+          duration: format === 'short' ? "00:48" : `${targetMinutesSelect.value}:00`,
           aspectRatio: format === 'short' ? "9:16" : "16:9",
-          hookText: format === 'short' ? "Direct short delivery with tags" : "Includes YouTube Chapters: 00:00 Hook | 03:15 Origins | 07:30 Deep Dive",
-          hashtags: "#Shorts #AIAgents #HighRPM #FYP #Viral #DidYouKnow",
+          hookText: format === 'short' ? "Detective stickman vector rendering with tags" : "Includes YouTube Chapters: 00:00 The Heist | 03:15 The Investigation | 07:30 The Clue",
+          hashtags: "#TrueCrime #UnsolvedMystery #Heist #Shorts #FYP #Noir",
           videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
           platforms: {
             telegram: { status: "sent" },
