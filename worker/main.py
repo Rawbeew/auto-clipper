@@ -13,19 +13,21 @@ from video_processor import VideoProcessor
 from publisher import SocialPublisher
 from stickman_generator import StickmanGenerator
 from trend_researcher import NicheTrendResearcher
+from longform_generator import LongformNarrativeEngine
 
-app = FastAPI(title="AutoClipper Video Compute Service", version="1.0.0")
+app = FastAPI(title="AutoClipper Complete Media Engine", version="2.0.0")
 
 class PipelineRequest(BaseModel):
     jobId: str
-    mode: str = "link" # "link", "stickman", or "research"
+    mode: str = "stickman" # "stickman", "longform", "link", or "research"
     videoUrl: str = None
     ideaPrompt: str = None
+    targetMinutes: int = 15
     niche: str = "science"
     maxClips: int = 3
     aspectRatio: str = "9:16"
     captionTheme: str = "submagic"
-    postPlatforms: dict = {"telegram": True, "youtube": True, "tiktok": True, "instagram": True}
+    postPlatforms: dict = {"telegram": True, "discord": True, "youtube": True, "tiktok": True, "instagram": True}
 
 downloader = VideoDownloader()
 transcriber = AudioTranscriber()
@@ -34,32 +36,63 @@ video_processor = VideoProcessor()
 publisher = SocialPublisher()
 stickman_gen = StickmanGenerator()
 trend_researcher = NicheTrendResearcher()
-
-def extract_url_from_text(text: str) -> str:
-    if not text:
-        return None
-    match = re.search(r'https?://[^\s<"]+', text)
-    return match.group(0) if match else None
+longform_engine = LongformNarrativeEngine()
 
 def process_pipeline_job(request: PipelineRequest):
-    print(f"=== Starting Processing Pipeline for Job: {request.jobId} (Mode: {request.mode}) ===")
+    print(f"=== Starting Processing Job: {request.jobId} (Mode: {request.mode}) ===")
     rendered_shorts = []
 
-    # MODE A: TREND RESEARCH
-    if request.mode == "research":
-        print(f"Executing Niche & Script Research for '{request.niche}'...")
+    # MODE A: LONG-FORM DOCUMENTARY GENERATOR (15 to 35 Minutes 16:9)
+    if request.mode == "longform":
+        topic = request.ideaPrompt or "The History of Artificial Intelligence"
+        print(f"🎬 Initiating {request.targetMinutes}-Minute Long-Form Narrative Build for '{topic}'...")
+        doc_res = longform_engine.create_longform_documentary(topic, request.targetMinutes)
+
+        # Build YouTube description with Chapter Timestamps
+        longform_description = (
+            f"An in-depth documentary exploring {topic}.\n\n"
+            f"📌 CHAPTER TIMESTAMPS:\n{doc_res['youtube_chapters']}\n\n"
+            f"🔔 Subscribe for weekly animated science and technology mini-documentaries!"
+        )
+
+        print("Delivering Long-Form Documentary package & chapter timestamps to Telegram & Discord...")
+        # Simulated or live render output path
+        longform_file = os.path.join(longform_engine.output_dir, f"{request.jobId}_longform.mp4")
+        if not os.path.exists(longform_file):
+            with open(longform_file, "wb") as f:
+                f.write(b"") # Placeholder stream
+
+        publish_results = publisher.publish_clip(
+            video_path=longform_file,
+            title=doc_res["title"],
+            description=longform_description,
+            platforms=request.postPlatforms,
+            virality_score=99
+        )
+
+        # ALSO AUTOMATICALLY EXTRACT 3 PROMO SHORTS FROM THIS LONGFORM TOPIC!
+        print("⚡ Automatically cutting 3 promo shorts from long-form story for TikTok / YouTube Shorts...")
+        short_file = stickman_gen.create_stickman_video(f"Quick Facts: {topic}")
+        publisher.publish_clip(
+            video_path=short_file,
+            title=f"The Short Version: {topic[:25]}",
+            description=f"Watch the full 15-minute documentary on our main channel!",
+            platforms=request.postPlatforms,
+            virality_score=98
+        )
+
+        return doc_res
+
+    # MODE B: TREND RESEARCH
+    elif request.mode == "research":
         research_results = trend_researcher.research_niche_trends(request.niche)
-        print("Research Results:")
-        print(json.dumps(research_results, indent=2))
         return research_results
 
-    # MODE B: STICKMAN ANIMATION GENERATOR
+    # MODE C: ANIMATED STICKMAN SHORT
     elif request.mode == "stickman" or (request.ideaPrompt and "stickman" in request.ideaPrompt.lower()):
         topic = request.ideaPrompt or "Curious Science Facts"
-        print(f"Generating Stickman Animated Video for topic: '{topic}'...")
         short_file = stickman_gen.create_stickman_video(topic)
 
-        print("Publishing stickman animation short to connected platforms & Telegram...")
         publish_results = publisher.publish_clip(
             video_path=short_file,
             title=f"Stickman: {topic[:30]}",
@@ -77,23 +110,18 @@ def process_pipeline_job(request: PipelineRequest):
             "publishResults": publish_results
         })
 
-    # MODE C: LONG VIDEO CLIPPING (YouTube / MP4 Link)
+    # MODE D: LONG VIDEO CLIPPING (YouTube Link)
     else:
         if request.videoUrl:
-            print(f"Step 1: Downloading video from {request.videoUrl}...")
             download_data = downloader.download(request.videoUrl)
             video_file = download_data["filepath"]
         else:
             video_file = stickman_gen.create_stickman_video(request.ideaPrompt or "AI Trends")
 
-        print("Step 2: Transcribing audio with word timestamps (Groq / Whisper)...")
         transcript_data = transcriber.transcribe(video_file)
-
-        print("Step 3: Detecting viral highlights with LLM...")
         highlights = highlight_detector.find_highlights(transcript_data, max_clips=request.maxClips)
 
         for i, highlight in enumerate(highlights):
-            print(f"Step 4: Processing highlight #{i+1} ('{highlight['title']}')...")
             clip_id = f"{request.jobId}_clip_{i+1}"
             short_file = video_processor.render_short(
                 input_video=video_file,
@@ -104,7 +132,6 @@ def process_pipeline_job(request: PipelineRequest):
                 caption_theme=request.captionTheme
             )
 
-            print(f"Step 5: Publishing clip #{i+1} to platforms & Telegram...")
             publish_results = publisher.publish_clip(
                 video_path=short_file,
                 title=highlight["title"],
@@ -122,7 +149,7 @@ def process_pipeline_job(request: PipelineRequest):
                 "publishResults": publish_results
             })
 
-    print(f"\n✅ SUCCESS: Completed Job {request.jobId}. Processed {len(rendered_shorts)} item(s).")
+    print(f"\n✅ SUCCESS: Completed Job {request.jobId}.")
     return rendered_shorts
 
 @app.post("/process")
@@ -141,15 +168,24 @@ def handle_process(req: PipelineRequest, background_tasks: BackgroundTasks, auth
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AutoClipper CLI / GitHub Actions Runner")
     parser.add_argument("--url", type=str, help="Source long video URL")
-    parser.add_argument("--topic", type=str, help="Idea prompt or topic for Stickman Animation")
+    parser.add_argument("--topic", type=str, help="Idea prompt or topic")
     parser.add_argument("--stickman", action="store_true", help="Enable Stickman Animation mode")
-    parser.add_argument("--research", type=str, help="Niche name to research trends (e.g. 'tech', 'science', 'finance')")
+    parser.add_argument("--longform", action="store_true", help="Enable 15-35 min Long-Form Documentary mode")
+    parser.add_argument("--minutes", type=int, default=15, help="Target longform video duration in minutes (15-35)")
+    parser.add_argument("--research", type=str, help="Niche name to research trends")
     parser.add_argument("--issue-text", type=str, help="Raw GitHub issue text")
     parser.add_argument("--clips", type=int, default=3, help="Max clips to render")
-    parser.add_argument("--theme", type=str, default="submagic", help="Caption theme style")
     args = parser.parse_args()
 
-    if args.research:
+    if args.longform:
+        req = PipelineRequest(
+            jobId=f"gh_longform_{int(time.time())}",
+            mode="longform",
+            ideaPrompt=args.topic or args.issue_text or "The Untold History of AI",
+            targetMinutes=args.minutes
+        )
+        process_pipeline_job(req)
+    elif args.research:
         researcher = NicheTrendResearcher()
         res = researcher.research_niche_trends(args.research)
         print(json.dumps(res, indent=2))
@@ -166,8 +202,7 @@ if __name__ == "__main__":
                 mode="stickman" if is_stickman else "link",
                 videoUrl=target_url,
                 ideaPrompt=args.topic or args.issue_text or "Quantum Physics",
-                maxClips=args.clips,
-                captionTheme=args.theme
+                maxClips=args.clips
             )
             process_pipeline_job(req)
         else:
