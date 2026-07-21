@@ -5,12 +5,13 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client optimized for Groq LPU, Cerebras, 
+    Unified AI Multi-Provider Client optimized for Groq LPU, DeepSeek, Cerebras, 
     SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
     Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
         self.groq_key = os.getenv("GROQ_API_KEY")
+        self.deepseek_key = os.getenv("DEEPSEEK_API_KEY")
         self.cerebras_key = os.getenv("CEREBRAS_API_KEY")
         self.sambanova_key = os.getenv("SAMBANOVA_API_KEY")
         self.siliconflow_key = os.getenv("SILICONFLOW_API_KEY")
@@ -21,9 +22,9 @@ class MultiAIProvider:
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         """
         Runs completion across providers in order of speed and available credits:
-        Groq LPU -> Cerebras -> SiliconFlow -> Gemini 2.0 -> Anything.com -> OpenAI
+        Groq LPU -> DeepSeek -> Cerebras -> SiliconFlow -> Gemini 2.0 -> Anything.com -> OpenAI
         """
-        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B & DeepSeek R1)
+        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B & DeepSeek R1 Distill)
         if self.groq_key:
             res = self._call_openai_compatible(
                 url="https://api.groq.com/openai/v1/chat/completions",
@@ -35,7 +36,19 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 2. Cerebras Cloud Engine
+        # 2. Native DeepSeek API (deepseek-v4-flash / deepseek-chat)
+        if self.deepseek_key:
+            res = self._call_openai_compatible(
+                url="https://api.deepseek.com/chat/completions",
+                api_key=self.deepseek_key,
+                model="deepseek-v4-flash",
+                prompt=prompt,
+                system_prompt=system_prompt
+            )
+            if res:
+                return res
+
+        # 3. Cerebras Cloud Engine
         if self.cerebras_key:
             res = self._call_openai_compatible(
                 url="https://api.cerebras.ai/v1/chat/completions",
@@ -47,7 +60,7 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 3. SiliconFlow (Qwen 2.5 72B)
+        # 4. SiliconFlow (Qwen 2.5 72B)
         if self.siliconflow_key:
             res = self._call_openai_compatible(
                 url="https://api.siliconflow.cn/v1/chat/completions",
@@ -59,13 +72,13 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 4. Gemini 2.0 (Google)
+        # 5. Gemini 2.0 (Google)
         if self.gemini_key:
             res = self._call_gemini(prompt, system_prompt)
             if res:
                 return res
 
-        # 5. Anything.com API
+        # 6. Anything.com API
         if self.anything_key:
             res = self._call_openai_compatible(
                 url="https://api.anything.com/v1/chat/completions",
@@ -77,7 +90,7 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 6. OpenAI API
+        # 7. OpenAI API
         if self.openai_key:
             res = self._call_openai_compatible(
                 url="https://api.openai.com/v1/chat/completions",
