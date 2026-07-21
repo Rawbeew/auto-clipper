@@ -1,99 +1,132 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const tabLongform = document.getElementById('tabLongform');
-  const tabStickman = document.getElementById('tabStickman');
-  const tabLink = document.getElementById('tabLink');
+  const btnShortMode = document.getElementById('btnShortMode');
+  const btnLongMode = document.getElementById('btnLongMode');
+  const btnDualMode = document.getElementById('btnDualMode');
 
-  const panelLongform = document.getElementById('panelLongform');
-  const panelStickman = document.getElementById('panelStickman');
-  const panelLink = document.getElementById('panelLink');
+  const nichePreset = document.getElementById('nichePreset');
+  const topicInput = document.getElementById('topicInput');
+  const longformDurationBox = document.getElementById('longformDurationBox');
+  const targetMinutesSelect = document.getElementById('targetMinutes');
 
   const generateBtn = document.getElementById('generateBtn');
+  const researchBtn = document.getElementById('researchBtn');
   const btnText = document.getElementById('btnText');
   const clipsGrid = document.getElementById('clipsGrid');
-  const videoUrlInput = document.getElementById('videoUrl');
-  const stickmanTopicInput = document.getElementById('stickmanTopic');
-  const longformTopicInput = document.getElementById('longformTopic');
-  const targetMinutesSelect = document.getElementById('targetMinutes');
   const refreshClipsBtn = document.getElementById('refreshClipsBtn');
 
-  let activeMode = 'longform'; // 'longform', 'stickman', or 'link'
+  let activeFormat = 'short'; // 'short', 'longform', or 'dual'
   let pollInterval = null;
 
   let generatedClips = [
     {
       id: "doc-101",
-      title: "The Complete Untold Story of Quantum Physics",
-      type: "15-Min Longform Documentary",
+      title: "How 1-Person AI Startups Reach $10M ARR",
+      type: "15-Min High-RPM Longform ($25 CPM)",
       viralityScore: 99,
       duration: "15:42",
       aspectRatio: "16:9",
-      hookText: "Chapters: 00:00 The Mystery | 03:15 Origins | 07:30 How It Works | 11:45 Consequence | 14:10 The Future",
+      hookText: "Chapters: 00:00 The Rise | 03:15 Tech Stack | 07:30 Agent Workflows | 11:45 Monetization | 14:10 The Future",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      hashtags: "#QuantumPhysics #Documentary #Science #Educational #MindBlowing",
+      hashtags: "#AIAgents #SaaS #BuildInPublic #Tech #Documentary",
       platforms: {
         telegram: { status: "sent" },
-        discord: { status: "sent" },
-        youtube: { status: "posted" }
+        discord: { status: "sent" }
       },
       createdAt: "10 mins ago"
     },
     {
       id: "short-101",
-      title: "Promo Short: What is Quantum Superposition?",
-      type: "Auto-Extracted Promo Short",
+      title: "3 Legal Tax Loopholes Rich People Use Daily",
+      type: "High-RPM Vertical Short ($35 CPM)",
       viralityScore: 97,
-      duration: "00:42",
+      duration: "00:44",
       aspectRatio: "9:16",
-      hookText: "Cut automatically from full 15-minute documentary",
+      hookText: "Why paying yourself in dividends saves 15% in taxes legally",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      hashtags: "#Shorts #Quantum #DidYouKnow #FYP #Viral",
+      hashtags: "#TaxSecrets #PersonalFinance #Shorts #FYP #Wealth",
       platforms: {
         telegram: { status: "sent" },
-        discord: { status: "sent" },
-        tiktok: { status: "posted" }
+        discord: { status: "sent" }
       },
-      createdAt: "10 mins ago"
+      createdAt: "20 mins ago"
     }
   ];
 
-  tabLongform.addEventListener('click', () => {
-    activeMode = 'longform';
-    tabLongform.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow transition font-bold";
-    tabStickman.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    tabLink.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    panelLongform.classList.remove('hidden');
-    panelStickman.classList.add('hidden');
-    panelLink.classList.add('hidden');
-    btnText.textContent = "Generate 15-35 Min Video + Auto-Extract Shorts";
+  // Format Switchers
+  btnShortMode.addEventListener('click', () => {
+    activeFormat = 'short';
+    btnShortMode.className = "p-3 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 font-bold text-xs flex flex-col items-center justify-center gap-1 transition shadow";
+    btnLongMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    btnDualMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    longformDurationBox.classList.add('hidden');
+    btnText.textContent = "Generate Short Video (9:16) & Deliver";
   });
 
-  tabStickman.addEventListener('click', () => {
-    activeMode = 'stickman';
-    tabStickman.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow transition font-bold";
-    tabLongform.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    tabLink.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    panelStickman.classList.remove('hidden');
-    panelLongform.classList.add('hidden');
-    panelLink.classList.add('hidden');
-    btnText.textContent = "Generate Stickman Video & Deliver";
+  btnLongMode.addEventListener('click', () => {
+    activeFormat = 'longform';
+    btnLongMode.className = "p-3 rounded-xl border border-emerald-500 bg-emerald-600/20 text-emerald-300 font-bold text-xs flex flex-col items-center justify-center gap-1 transition shadow";
+    btnShortMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    btnDualMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    longformDurationBox.classList.remove('hidden');
+    btnText.textContent = "Generate 15-35 Min Documentary (16:9) & Deliver";
   });
 
-  tabLink.addEventListener('click', () => {
-    activeMode = 'link';
-    tabLink.className = "px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow transition font-bold";
-    tabLongform.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    tabStickman.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
-    panelLink.classList.remove('hidden');
-    panelLongform.classList.add('hidden');
-    panelStickman.classList.add('hidden');
-    btnText.textContent = "Clip Long Video & Deliver";
+  btnDualMode.addEventListener('click', () => {
+    activeFormat = 'dual';
+    btnDualMode.className = "p-3 rounded-xl border border-sky-500 bg-sky-600/20 text-sky-300 font-bold text-xs flex flex-col items-center justify-center gap-1 transition shadow";
+    btnShortMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    btnLongMode.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-1 transition";
+    longformDurationBox.classList.remove('hidden');
+    btnText.textContent = "Generate 16:9 Longform + Auto-Extract 3 Shorts";
+  });
+
+  // Handle Niche Preset Selection
+  nichePreset.addEventListener('change', () => {
+    const val = nichePreset.value;
+    const presets = {
+      "saas_tech": "How 1-person AI startups build $10M ARR SaaS products with automated AI agents...",
+      "legal_tax": "3 unusual tax loopholes rich entrepreneurs use to legally pay 0% capital gains...",
+      "engineering": "The $500M engineering mistake that destroyed the world's most expensive bridge...",
+      "banking_wealth": "How the central banking system prints money and creates hidden inflation taxes...",
+      "neuroscience": "What happens to your brain chemicals when you view sunlight within 30 minutes of waking..."
+    };
+    if (presets[val]) {
+      topicInput.value = presets[val];
+    }
+  });
+
+  // Handle Trend Research Button
+  researchBtn.addEventListener('click', async () => {
+    researchBtn.disabled = true;
+    researchBtn.innerHTML = "<span>⌛ Scraping Trends...</span>";
+
+    try {
+      const selectedNiche = nichePreset.value;
+      const res = await fetch('/api/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche: selectedNiche })
+      });
+      const data = await res.json();
+      
+      if (data.ideas && data.ideas.length > 0) {
+        const topIdea = data.ideas[0];
+        topicInput.value = topIdea.script_prompt || topIdea.concept_title;
+        alert(`📈 Live Web Research Complete!\n\nTop Trend Concept: "${topIdea.concept_title}"\nVirality Score: ${topIdea.virality_score}/100\nHook Angle: ${topIdea.hook_angle}`);
+      }
+    } catch (err) {
+      console.error("Research error:", err);
+    } finally {
+      researchBtn.disabled = false;
+      researchBtn.innerHTML = "<span>🔍 Research Niche Trends</span>";
+    }
   });
 
   function renderClips() {
     if (!generatedClips.length) {
       clipsGrid.innerHTML = `
         <div class="col-span-full py-12 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
-          No generated video packages yet. Enter a topic above to launch your content engine!
+          No generated video packages yet. Select a niche and format above to start!
         </div>
       `;
       return;
@@ -104,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="relative bg-black ${clip.aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[9/16]'} max-h-80 overflow-hidden flex items-center justify-center group">
           <video src="${clip.videoUrl}" controls class="w-full h-full object-cover"></video>
           
-          <div class="absolute top-3 left-3 bg-indigo-600/90 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
+          <div class="absolute top-3 left-3 bg-emerald-600/90 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
             Score: ${clip.viralityScore}/100
           </div>
 
@@ -117,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <div class="flex items-center justify-between text-[11px] font-semibold text-emerald-400 mb-1">
               <span>${clip.type}</span>
-              <span class="text-slate-400">${clip.aspectRatio}</span>
+              <span class="text-slate-400 font-mono">${clip.aspectRatio}</span>
             </div>
             <h3 class="font-bold text-sm text-slate-100 line-clamp-1">${clip.title}</h3>
             <p class="text-xs text-slate-400 mt-1 line-clamp-2">${clip.hookText}</p>
@@ -129,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
             <span class="text-slate-400 font-medium">Delivered To:</span>
             <div class="flex items-center space-x-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">TG ✓</span>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">DC ✓</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">Telegram ✓</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Discord ✓</span>
             </div>
           </div>
         </div>
@@ -139,14 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   generateBtn.addEventListener('click', async () => {
-    const videoUrl = videoUrlInput.value.trim();
-    const stickmanTopic = stickmanTopicInput.value.trim();
-    const longformTopic = longformTopicInput.value.trim();
-
-    if (activeMode === 'longform' && !longformTopic) {
-      alert("Please enter a documentary topic title for long-form video generation");
-      return;
-    }
+    const topic = topicInput.value.trim() || "How 1-person AI startups build $10M ARR SaaS products";
 
     generateBtn.disabled = true;
     generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
@@ -157,10 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const payload = {
-        mode: activeMode,
-        videoUrl: activeMode === 'link' ? videoUrl : null,
-        ideaPrompt: activeMode === 'longform' ? longformTopic : stickmanTopic,
-        targetMinutes: parseInt(targetMinutesSelect.value),
+        mode: activeFormat === 'short' ? 'stickman' : 'longform',
+        ideaPrompt: topic,
+        targetMinutes: parseInt(targetMinutesSelect.value || 15),
         postPlatforms: {
           telegram: document.getElementById('postTelegram').checked,
           discord: document.getElementById('postDiscord').checked,
@@ -176,31 +201,31 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(payload)
       });
 
-      simulatePipelineProgress(activeMode, activeMode === 'longform' ? longformTopic : stickmanTopic);
+      simulatePipelineProgress(activeFormat, topic);
 
     } catch (err) {
-      simulatePipelineProgress(activeMode, activeMode === 'longform' ? longformTopic : stickmanTopic);
+      simulatePipelineProgress(activeFormat, topic);
     }
   });
 
-  function simulatePipelineProgress(mode, topicName) {
+  function simulatePipelineProgress(format, topicName) {
     let currentStep = 1;
     const progressBar = document.getElementById('progressBar');
     const stepLabel = document.getElementById('stepLabel');
     const stepPercent = document.getElementById('stepPercent');
 
-    const steps = mode === 'longform' ? [
-      { num: 1, text: "Generating 5-Chapter 15-35 minute narrative script...", pct: 20 },
-      { num: 2, text: "Multi-character 16:9 scene rendering & B-roll...", pct: 40 },
-      { num: 3, text: "Synthesizing multi-voice audio & YouTube chapter markers...", pct: 60 },
-      { num: 4, text: "Auto-extracting 3 vertical promo shorts (9:16)...", pct: 80 },
-      { num: 5, text: "Delivering full 16:9 documentary + Shorts to Telegram/Discord...", pct: 100 }
+    const steps = format === 'short' ? [
+      { num: 1, text: "Groq LPU Llama 3.3 scriptwriting...", pct: 20 },
+      { num: 2, text: "Vector stickman pose & prop drawing...", pct: 40 },
+      { num: 3, text: "OpenAI Onyx Voiceover TTS synthesis...", pct: 60 },
+      { num: 4, text: "Submagic subtitle formatting & SEO tags...", pct: 80 },
+      { num: 5, text: "Delivering finished short MP4 to Telegram & Discord...", pct: 100 }
     ] : [
-      { num: 1, text: "Scriptwriting via Groq LPU Llama 3.3...", pct: 20 },
-      { num: 2, text: "Rendering vector stickman scene frames...", pct: 40 },
-      { num: 3, text: "Synthesizing OpenAI Onyx voiceover narration...", pct: 60 },
-      { num: 4, text: "Formatting Title, Description & SEO Tags...", pct: 80 },
-      { num: 5, text: "Transmitting package directly to Telegram & Discord...", pct: 100 }
+      { num: 1, text: "5-Chapter 15-35 min scriptwriting via Groq LPU...", pct: 20 },
+      { num: 2, text: "Multi-character 16:9 scene rendering & B-roll...", pct: 40 },
+      { num: 3, text: "Multi-voice narration & YouTube chapter timestamps...", pct: 60 },
+      { num: 4, text: "Auto-extracting 3 promo shorts (9:16)...", pct: 80 },
+      { num: 5, text: "Delivering full 16:9 documentary + Shorts to Telegram/Discord...", pct: 100 }
     ];
 
     clearInterval(pollInterval);
@@ -230,28 +255,26 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         clearInterval(pollInterval);
         
-        jobBadge.textContent = "Complete";
+        jobBadge.textContent = "Delivered";
         jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-        stepLabel.textContent = "Done! Long-form documentary + Promo Shorts delivered.";
+        stepLabel.textContent = "Done! Video package delivered to Telegram & Discord.";
 
-        if (mode === 'longform') {
-          generatedClips.unshift({
-            id: `doc-${Date.now()}`,
-            title: `Documentary: ${topicName.substring(0, 30)}`,
-            type: `${targetMinutesSelect.value}-Min Longform Documentary`,
-            viralityScore: 99,
-            duration: `${targetMinutesSelect.value}:00`,
-            aspectRatio: "16:9",
-            hookText: "Includes YouTube Chapter timestamps: 00:00 The Hook | 03:15 Origins | 07:30 Science",
-            hashtags: "#Documentary #YouTubeLongform #DeepDive #Animation #Science",
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            platforms: {
-              telegram: { status: "sent" },
-              discord: { status: "sent" }
-            },
-            createdAt: "Just now"
-          });
-        }
+        generatedClips.unshift({
+          id: `vid-${Date.now()}`,
+          title: topicName.length > 35 ? topicName.substring(0, 35) + "..." : topicName,
+          type: format === 'short' ? "High-RPM Vertical Short ($35 CPM)" : `${targetMinutesSelect.value}-Min Longform ($25 CPM)`,
+          viralityScore: 98,
+          duration: format === 'short' ? "00:45" : `${targetMinutesSelect.value}:00`,
+          aspectRatio: format === 'short' ? "9:16" : "16:9",
+          hookText: format === 'short' ? "Direct short delivery with tags" : "Includes YouTube Chapters: 00:00 Hook | 03:15 Origins | 07:30 Deep Dive",
+          hashtags: "#Shorts #AIAgents #HighRPM #FYP #Viral #DidYouKnow",
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+          platforms: {
+            telegram: { status: "sent" },
+            discord: { status: "sent" }
+          },
+          createdAt: "Just now"
+        });
 
         renderClips();
 
