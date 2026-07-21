@@ -21,14 +21,14 @@
         </div>
         <div>
           <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-300">ClipPulse AI</h1>
-          <p class="text-xs text-indigo-400 font-medium">Cloudflare Pages • Video Clipper & Stickman Generator</p>
+          <p class="text-xs text-indigo-400 font-medium">Cloudflare Pages • Telegram Bot & Multi-Platform Delivery</p>
         </div>
       </div>
 
       <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full text-xs text-emerald-300 font-semibold">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Stickman Engine Ready</span>
+        <div class="flex items-center space-x-2 bg-sky-500/10 border border-sky-500/30 px-3 py-1.5 rounded-full text-xs text-sky-300 font-semibold">
+          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+          <span>Telegram Integration Active</span>
         </div>
       </div>
     </div>
@@ -37,22 +37,19 @@
   <!-- Main Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
     
-    <!-- Hero Banner with Architecture Mode Switcher -->
+    <!-- Hero Banner -->
     <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
       <div>
         <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-          <span class="px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">Serverless Execution</span>
-          Zero-Hosting Video & Stickman Pipeline
+          <span class="px-2 py-0.5 rounded text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold">Telegram Bot Ready</span>
+          Receive Rendered Videos Directly in Telegram DM
         </h2>
-        <p class="text-xs text-slate-400 mt-1">Extract shorts from YouTube links or create viral animated Stickman stories automatically.</p>
+        <p class="text-xs text-slate-400 mt-1">Get your finished 9:16 MP4 video files delivered to your phone in Telegram before posting.</p>
       </div>
 
-      <!-- Execution Strategy Selector -->
-      <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold">
-        <button id="modeGithub" class="px-3 py-2 rounded-lg bg-indigo-600 text-white shadow transition flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          GitHub Actions Runner ($0 Free)
-        </button>
+      <!-- Execution Strategy -->
+      <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold text-slate-300">
+        <span class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow">GitHub Actions + Telegram Engine</span>
       </div>
     </div>
 
@@ -65,7 +62,7 @@
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Create Video Pipeline
+            Create Short Video
           </h2>
           <!-- Tab selector -->
           <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-medium">
@@ -86,19 +83,17 @@
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Stickman Animation Style</label>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Stickman Style</label>
               <select id="stickmanStyle" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                 <option value="dark_slate" selected>Minimal Slate Vector (CGP Grey)</option>
                 <option value="light_notebook">Hand-drawn Notebook</option>
-                <option value="cyber_neon">Cyber Neon Glow</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Voiceover Voice</label>
+              <label class="block text-xs font-medium text-slate-400 mb-1">AI Voiceover Accent</label>
               <select id="voiceChoice" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                <option value="onyx" selected>Onyx (Deep Narrator)</option>
-                <option value="alloy">Alloy (Clear Conversational)</option>
-                <option value="fable">Fable (Expressive British)</option>
+                <option value="onyx" selected>OpenAI Onyx (Deep Narrator)</option>
+                <option value="alloy">OpenAI Alloy (Conversational)</option>
               </select>
             </div>
           </div>
@@ -126,24 +121,26 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Aspect Ratio</label>
               <select id="aspectRatio" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                <option value="9:16" selected>9:16 Vertical (Shorts/TikTok)</option>
-                <option value="1:1">1:1 Square (Instagram Post)</option>
+                <option value="9:16" selected>9:16 Vertical (Shorts/TikTok/Reels)</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Caption Theme</label>
               <select id="captionTheme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
                 <option value="submagic" selected>Submagic Animated Yellow</option>
-                <option value="bold_white">Bold White Clean</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- Auto Post Configuration -->
+        <!-- Delivery Destinations Configuration -->
         <div class="mt-6 pt-4 border-t border-slate-800">
-          <label class="block text-xs font-medium text-slate-300 mb-2">Auto-Publish Platforms</label>
-          <div class="grid grid-cols-3 gap-3">
+          <label class="block text-xs font-medium text-slate-300 mb-2">Delivery Destinations</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <label class="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-sky-500/40 cursor-pointer hover:border-sky-400 transition shadow">
+              <input type="checkbox" id="postTelegram" class="rounded text-sky-500 focus:ring-sky-400 bg-slate-900 border-slate-700" checked />
+              <span class="text-xs font-bold text-sky-300">Telegram Bot</span>
+            </label>
             <label class="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition">
               <input type="checkbox" id="postYouTube" class="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700" checked />
               <span class="text-xs font-semibold text-slate-200">YouTube Shorts</span>
@@ -161,11 +158,9 @@
 
         <!-- Submit Button -->
         <div class="mt-6">
-          <button id="generateBtn" class="w-full bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5 active:translate-y-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span id="btnText">Generate Stickman Video & Auto-Post</span>
+          <button id="generateBtn" class="w-full bg-gradient-to-r from-sky-500 via-indigo-600 to-pink-600 hover:from-sky-400 hover:to-pink-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5 active:translate-y-0">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .54-1.43.53-.48-.01-1.4-.27-2.09-.49-.84-.27-1.51-.42-1.45-.89.03-.25.38-.51 1.07-.78 4.21-1.83 7.02-3.04 8.43-3.62 4.01-1.65 4.84-1.94 5.38-1.95.12 0 .38.03.55.18.14.12.18.29.2.47-.02.13-.03.35-.05.52z"/></svg>
+            <span id="btnText">Generate Video & Send to Telegram</span>
           </button>
         </div>
       </div>
@@ -181,11 +176,11 @@
           <div id="progressBox" class="space-y-4">
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs font-medium">
-                <span id="stepLabel" class="text-indigo-400">Ready to start</span>
+                <span id="stepLabel" class="text-sky-400">Ready to start</span>
                 <span id="stepPercent" class="text-slate-400">0%</span>
               </div>
               <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 w-0 transition-all duration-500"></div>
+                <div id="progressBar" class="h-full bg-gradient-to-r from-sky-400 to-indigo-500 w-0 transition-all duration-500"></div>
               </div>
             </div>
 
@@ -193,31 +188,31 @@
             <ul class="text-xs space-y-2.5 pt-2 border-t border-slate-800/80 text-slate-400" id="pipelineTimeline">
               <li class="flex items-center gap-2" id="step-1">
                 <span class="w-2 h-2 rounded-full bg-slate-700"></span>
-                <span>1. Generate Stickman Story Script</span>
+                <span>1. Groq LPU / AI Scriptwriting</span>
               </li>
               <li class="flex items-center gap-2" id="step-2">
                 <span class="w-2 h-2 rounded-full bg-slate-700"></span>
-                <span>2. Render Vector Stickman Poses & Expressions</span>
+                <span>2. Render Stickman / Video Crop</span>
               </li>
               <li class="flex items-center gap-2" id="step-3">
                 <span class="w-2 h-2 rounded-full bg-slate-700"></span>
-                <span>3. Synthesize Voiceover Audio</span>
+                <span>3. OpenAI Onyx Voiceover TTS</span>
               </li>
               <li class="flex items-center gap-2" id="step-4">
                 <span class="w-2 h-2 rounded-full bg-slate-700"></span>
-                <span>4. Assemble 9:16 Short Video with Subtitles</span>
+                <span>4. FFmpeg 9:16 Video Build</span>
               </li>
               <li class="flex items-center gap-2" id="step-5">
                 <span class="w-2 h-2 rounded-full bg-slate-700"></span>
-                <span>5. Auto-Post to YouTube/TikTok/IG</span>
+                <span>5. Send MP4 directly to Telegram DM</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div class="mt-6 p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs text-slate-400">
-          <div class="font-semibold text-emerald-400 mb-1">Stickman Generator Architecture:</div>
-          Vector line animation + LLM storytelling script + Text-to-Speech voiceover + Auto-posting API.
+          <div class="font-semibold text-sky-300 mb-1">Telegram Delivery Architecture:</div>
+          Rendered MP4 sent as high-quality video attachment to your personal Telegram chat or channel.
         </div>
       </div>
     </div>
@@ -226,11 +221,11 @@
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
         <div>
-          <h2 class="text-lg font-semibold text-slate-100">Generated Clips & Stickman Videos</h2>
-          <p class="text-xs text-slate-400">Preview generated 9:16 videos, view virality scores, and monitor auto-posting status.</p>
+          <h2 class="text-lg font-semibold text-slate-100">Generated Clips & Telegram Dispatch Logs</h2>
+          <p class="text-xs text-slate-400">Preview generated 9:16 videos, view virality scores, and monitor Telegram delivery status.</p>
         </div>
         <button id="refreshClipsBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition border border-slate-700">
-          Refresh Gallery
+          Refresh List
         </button>
       </div>
 
@@ -243,7 +238,7 @@
 
   <!-- Footer -->
   <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
-    Cloudflare Pages Edge Frontend • Vector Stickman Animation Generator
+    Cloudflare Pages Edge Frontend • Telegram Bot Direct Video Publisher
   </footer>
 
   <script src="app.js"></script>
