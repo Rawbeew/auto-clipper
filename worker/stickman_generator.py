@@ -20,8 +20,8 @@ class StickmanGenerator:
     """
     Advanced YouTube-Style Animated Stickman Engine.
     Supports:
-    1. Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand, Audience)
-    2. Slate Minimal Vector (CGP Grey / Casually Explained)
+    1. Casually Explained Signature Format (White MS Paint canvas, hand-drawn graphs, deadpan stickman, blue/red arrows)
+    2. Stand-Up Comedy Stage Animation (Red Velvet Curtain, Spotlight, Mic Stand, Audience)
     3. True Crime Noir Vector (Detective Fedora, Magnifying Glass, Crimson Banner)
     Includes HD Edge-TTS Voiceovers & Submagic Yellow Highlighted Captions.
     """
@@ -32,66 +32,64 @@ class StickmanGenerator:
 
     def generate_script(self, topic: str) -> dict:
         prompt = f"""
-You are a top YouTube stand-up comedy & documentary stickman animator.
-Write an engaging 30-second stickman video script demonstrating or joking about: "{topic}".
+You are Casually Explained (the famous YouTube animator known for dry, sarcastic MS-Paint style stickman videos).
+Write a deadpan, fast-paced 30-second stickman script explaining or roasting: "{topic}".
 
 Provide a JSON object with:
 1. "title": Short catchy CTR title
-2. "style": ["standup_comedy", "dark_slate", "detective"]
+2. "style": "casually_explained"
 3. "scenes": A list of 4 scenes. Each scene must have:
    - "scene_num": integer
    - "duration": float (e.g. 6.0)
-   - "narration": Spoken text (15-25 words max)
-   - "action_type": Visual type ["standup_mic", "walking", "presenting_chart", "falling_cash", "mind_blown", "detective"]
+   - "narration": Sarcastic, matter-of-fact deadpan spoken text (15-25 words max)
    - "headline": Short 3-5 word headline overlay
-   - "demonstration_element": Extra prop or graph ["chart_down", "chart_up", "cash", "matrix_code", "lightbulb", "none"]
+   - "diagram_type": ["graph", "flowchart", "choices", "mind_blown"]
 
 Format: JSON strictly.
 """
-        res = self.ai_provider.generate_json(prompt, system_prompt="You are an expert YouTube stickman animator. Respond strictly in valid JSON.")
+        res = self.ai_provider.generate_json(prompt, system_prompt="You are Casually Explained. Respond strictly in valid JSON.")
         if res:
             return res
 
         return {
-            "title": f"The Stand-Up Story of {topic}",
-            "style": "standup_comedy",
+            "title": f"Casually Explained: {topic}",
+            "style": "casually_explained",
             "scenes": [
                 {
                     "scene_num": 1,
                     "duration": 6.0,
-                    "narration": f"Have you ever noticed how weird {topic} actually is? Let me break this down for you.",
-                    "action_type": "standup_mic",
-                    "headline": "THE REALITY OF " + topic.upper()[:16],
-                    "demonstration_element": "lightbulb"
+                    "narration": f"If you've ever spent more than five minutes thinking about {topic}, congratulations.",
+                    "headline": f"CASUALLY EXPLAINED: {topic.upper()[:16]}",
+                    "diagram_type": "graph"
                 },
                 {
                     "scene_num": 2,
                     "duration": 6.0,
-                    "narration": "People literally spend billions of dollars on this every year without questioning it.",
-                    "action_type": "falling_cash",
-                    "headline": "BILLIONS WASTED!",
-                    "demonstration_element": "cash"
+                    "narration": "You are currently sitting right at the peak of Mount Stupid on the confidence chart.",
+                    "headline": "THE CONFIDENCE PARADOX",
+                    "diagram_type": "graph"
                 },
                 {
                     "scene_num": 3,
                     "duration": 6.0,
-                    "narration": "And when you look at the statistics, the results are completely absurd.",
-                    "action_type": "presenting_chart",
-                    "headline": "ABSURD NUMBERS 📉",
-                    "demonstration_element": "chart_down"
+                    "narration": "Option A is to admit you don't know what you're doing. Option B is to pretend you do.",
+                    "headline": "CHOOSING YOUR PATH",
+                    "diagram_type": "choices"
                 },
                 {
                     "scene_num": 4,
                     "duration": 6.0,
-                    "narration": "So next time someone asks you about it, just remember this one simple truth.",
-                    "action_type": "mind_blown",
-                    "headline": "THE TRUTH 🤯",
-                    "demonstration_element": "none"
+                    "narration": "Subscribe to the channel, or don't. The choice is completely up to your dopamine levels.",
+                    "headline": "LIKE & SUBSCRIBE 🤯",
+                    "diagram_type": "mind_blown"
                 }
             ]
         }
 
     def synthesize_voiceover(self, text: str, output_mp3: str) -> bool:
+        """
+        Synthesizes deadpan, calm male narration (Edge-TTS en-US-GuyNeural / OpenAI Onyx).
+        """
         if edge_tts:
             try:
                 async def run_edge():
@@ -125,104 +123,104 @@ Format: JSON strictly.
                 f.write(b"0" * 5000)
         return True
 
-    def draw_animated_scene_frame(self, action_type: str, headline: str, demo_element: str, narration_text: str, frame_num: int, total_frames: int, style: str = "standup_comedy", width=1080, height=1920) -> Image.Image:
+    def draw_casually_explained_frame(self, headline: str, narration_text: str, diagram_type: str, frame_num: int, total_frames: int, width=1080, height=1920) -> Image.Image:
         """
-        Renders Stand-Up Comedy Club Stage or Noir/Slate vector frames with animated props & Submagic captions.
+        Casually Explained Signature MS-Paint Canvas Renderer:
+        - White background
+        - Black stickman with deadpan facial features
+        - Hand-drawn Dunning-Kruger graphs or MS-Paint option boxes with red/blue indicator arrows
+        - Submagic active word highlighted subtitles
         """
-        progress = frame_num / max(1, total_frames)
+        bg_color = (255, 255, 255)
+        img = Image.new("RGB", (width, height), bg_color)
+        draw = ImageDraw.Draw(img)
 
-        # STAND-UP COMEDY STAGE BACKGROUND
-        if style == "standup_comedy" or action_type == "standup_mic":
-            img = Image.new("RGB", (width, height), (24, 8, 12))
-            draw = ImageDraw.Draw(img)
+        stroke_color = (15, 23, 42)
+        red_accent = (225, 29, 72)
+        blue_accent = (37, 99, 235)
+        line_w = 12
 
-            # Red Velvet Curtain Folds
-            for x in range(0, width, 80):
-                shade = 120 + int(math.sin(x * 0.05) * 40)
-                draw.rectangle([x, 0, x + 40, height - 500], fill=(shade, 15, 25))
-                draw.rectangle([x + 40, 0, x + 80, height - 500], fill=(max(0, shade - 30), 10, 18))
-
-            # Wooden Stage Floor
-            draw.rectangle([0, height - 500, width, height], fill=(45, 22, 12))
-            for line_y in range(height - 500, height, 40):
-                draw.line([0, line_y, width, line_y], fill=(30, 14, 8), width=2)
-
-            # Warm Spotlight
-            cx = width // 2
-            cy = height - 400
-            spotlight_r = 320
-            draw.ellipse([cx - spotlight_r, cy - 120, cx + spotlight_r, cy + 120], fill=(254, 240, 138, 180), outline=(253, 224, 71), width=4)
-
-            # Audience Silhouettes
-            for aud in range(0, width, 110):
-                aud_head_y = height - 120 + int(math.sin(aud * 0.1) * 15)
-                draw.ellipse([aud - 40, aud_head_y, aud + 40, aud_head_y + 100], fill=(2, 6, 23))
-
-        else: # Dark Slate / Noir
-            bg_color = (2, 6, 23) if style == "detective" else (15, 23, 42)
-            img = Image.new("RGB", (width, height), bg_color)
-            draw = ImageDraw.Draw(img)
-            cx = width // 2
-            cy = height // 2 + 100
-
-        # Motion & Stickman Drawing
-        stickman_cy = cy + int(math.sin(frame_num * 0.2) * 8)
-        stroke_color = (255, 255, 255)
+        # Stickman
+        cx = 320
+        cy = height // 2 + 200 + int(math.sin(frame_num * 0.15) * 6)
         head_r = 75
         body_len = 220
-        line_w = 16
+        head_cy = cy - body_len - head_r
 
-        head_cy = stickman_cy - body_len - head_r
-
-        # Head & Smile
+        # Head & Deadpan Face
         draw.ellipse([cx - head_r, head_cy - head_r, cx + head_r, head_cy + head_r], outline=stroke_color, width=line_w)
-        draw.ellipse([cx - 30, head_cy - 15, cx - 10, head_cy + 5], fill=stroke_color)
-        draw.ellipse([cx + 10, head_cy - 15, cx + 30, head_cy + 5], fill=stroke_color)
-        draw.arc([cx - 30, head_cy, cx + 30, head_cy + 30], start=0, end=180, fill=stroke_color, width=8)
+        draw.ellipse([cx - 30, head_cy - 10, cx - 10, head_cy + 10], fill=stroke_color)
+        draw.ellipse([cx + 10, head_cy - 10, cx + 30, head_cy + 10], fill=stroke_color)
+        draw.line([cx - 20, head_cy + 30, cx + 20, head_cy + 30], fill=stroke_color, width=6)
 
-        # Spine
-        draw.line([cx, head_cy + head_r, cx, stickman_cy], fill=stroke_color, width=line_w)
+        # Spine & Gesturing Arm pointing at diagram
+        draw.line([cx, head_cy + head_r, cx, cy], fill=stroke_color, width=line_w)
         shoulder_y = head_cy + head_r + 40
-
-        # Arms (Microphone Stand)
-        draw.line([cx, shoulder_y, cx - 120, shoulder_y + 40], fill=stroke_color, width=line_w)
-        draw.line([cx, shoulder_y, cx + 60, shoulder_y - 20], fill=stroke_color, width=line_w)
-        draw.line([cx + 60, shoulder_y - 20, cx + 25, head_cy + 25], fill=stroke_color, width=line_w)
-
-        # Silver Microphone & Stand
-        draw.ellipse([cx + 15, head_cy + 5, cx + 35, head_cy + 25], fill=(203, 213, 225), outline=(255, 255, 255), width=3)
-        draw.line([cx + 25, head_cy + 25, cx + 25, stickman_cy + 180], fill=(148, 163, 184), width=8)
+        draw.line([cx, shoulder_y, cx - 80, shoulder_y + 100], fill=stroke_color, width=line_w)
+        draw.line([cx, shoulder_y, cx + 180, shoulder_y - 40], fill=stroke_color, width=line_w)
 
         # Legs
-        draw.line([cx, stickman_cy, cx - 80, stickman_cy + 220], fill=stroke_color, width=line_w)
-        draw.line([cx, stickman_cy, cx + 80, stickman_cy + 220], fill=stroke_color, width=line_w)
+        draw.line([cx, cy, cx - 70, cy + 220], fill=stroke_color, width=line_w)
+        draw.line([cx, cy, cx + 70, cy + 220], fill=stroke_color, width=line_w)
 
-        # Demonstration Graphics Overlay (Charts / Money)
-        if demo_element == "chart_down":
-            gx, gy = cx + 160, head_cy - 100
-            draw.rectangle([gx, gy, gx + 260, gy + 260], outline=(51, 65, 85), width=4, fill=(2, 6, 23))
-            draw.line([gx + 20, gy + 40, gx + 100, gy + 80, gx + 180, gy + 180, gx + 240, gy + 240], fill=(225, 29, 72), width=12)
-        elif demo_element == "cash":
-            for bill in range(5):
-                bx = (cx - 300 + (bill * 130) + int(frame_num * 8)) % (width - 100)
-                by = (200 + (bill * 200) + int(frame_num * 15)) % (height - 300)
-                draw.rectangle([bx, by, bx + 110, by + 60], fill=(34, 197, 94), outline=(255, 255, 255), width=3)
+        # DIAGRAM ON RIGHT
+        if diagram_type == "choices":
+            # Draw Option A & Option B Boxes
+            bx1, by1 = 550, height // 2 - 200
+            draw.rectangle([bx1, by1, bx1 + 420, by1 + 140], outline=stroke_color, width=8, fill=(241, 245, 249))
+            draw.rectangle([bx1, by1 + 220, bx1 + 420, by1 + 360], outline=stroke_color, width=8, fill=(254, 226, 226))
 
-        # Top Headline Banner
+            try:
+                box_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 34)
+            except:
+                box_font = ImageFont.load_default()
+
+            draw.text((bx1 + 30, by1 + 50), "OPTION A: REASON", fill=stroke_color, font=box_font)
+            draw.text((bx1 + 30, by1 + 270), "OPTION B: CHAOS", fill=red_accent, font=box_font)
+
+        else: # Default Graph
+            gx, gy = 550, height // 2 - 150
+            gw, gh = 440, 480
+
+            draw.line([gx, gy, gx, gy + gh], fill=stroke_color, width=10)
+            draw.line([gx, gy + gh, gx + gw, gy + gh], fill=stroke_color, width=10)
+            draw.polygon([(gx, gy - 20), (gx - 15, gy + 10), (gx + 15, gy + 10)], fill=stroke_color)
+            draw.polygon([(gx + gw + 20, gy + gh), (gx + gw - 10, gy + gh - 15), (gx + gw - 10, gy + gh + 15)], fill=stroke_color)
+
+            try:
+                label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+            except:
+                label_font = ImageFont.load_default()
+
+            draw.text((gx + 10, gy - 60), "CONFIDENCE", fill=stroke_color, font=label_font)
+            draw.text((gx + 100, gy + gh + 20), "ACTUAL SKILL", fill=stroke_color, font=label_font)
+
+            curve_points = [
+                (gx, gy + gh - 20),
+                (gx + 100, gy + 80),
+                (gx + 220, gy + 380),
+                (gx + 340, gy + 240),
+                (gx + gw - 10, gy + 140)
+            ]
+            draw.line(curve_points, fill=red_accent, width=12)
+            draw.line([(gx + 100, gy + 80), (gx + 180, gy + 20)], fill=blue_accent, width=6)
+            draw.text((gx + 190, gy + 5), "YOU ARE HERE", fill=blue_accent, font=label_font)
+
+        # Top Title Header
         if headline:
-            padding_y = 160
             clean_hl = headline.encode('ascii', 'ignore').decode('ascii')
             try:
-                font_hl = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+                font_hl = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
             except:
                 font_hl = ImageFont.load_default()
 
             bbox = draw.textbbox((0, 0), clean_hl, font=font_hl)
             text_w = bbox[2] - bbox[0]
-            draw.rectangle([0, padding_y - 20, width, padding_y + 80], fill=(2, 6, 23))
-            draw.text(((width - text_w) // 2, padding_y), clean_hl, fill=(253, 224, 71), font=font_hl)
+            draw.rectangle([0, 140, width, 240], fill=(15, 23, 42))
+            draw.text(((width - text_w) // 2, 160), clean_hl, fill=(255, 255, 255), font=font_hl)
 
-        # Submagic Word Captions
+        # Submagic Captions
+        progress = frame_num / max(1, total_frames)
         words = [w.strip() for w in narration_text.split() if w.strip()]
         if words:
             word_idx = min(len(words) - 1, int(progress * len(words)))
@@ -241,7 +239,7 @@ Format: JSON strictly.
             phrase_w = bbox_p[2] - bbox_p[0]
 
             start_x = (width - phrase_w) // 2
-            draw.rectangle([start_x - 30, sub_y - 15, start_x + phrase_w + 30, sub_y + 85], fill=(0, 0, 0, 220))
+            draw.rectangle([start_x - 30, sub_y - 15, start_x + phrase_w + 30, sub_y + 85], fill=(15, 23, 42))
 
             curr_x = start_x
             for i, word in enumerate(phrase_words):
@@ -260,9 +258,8 @@ Format: JSON strictly.
         return img
 
     def create_stickman_video(self, topic: str) -> str:
-        print(f"🎬 Generating Stand-Up Comedy Style Stickman Short for: '{topic}'...")
+        print(f"🎬 Generating Casually Explained Style Video for: '{topic}'...")
         script_data = self.generate_script(topic)
-        style = script_data.get("style", "standup_comedy")
 
         scene_files = []
         fps = 24
@@ -279,14 +276,12 @@ Format: JSON strictly.
             os.makedirs(frame_dir, exist_ok=True)
 
             for f in range(total_frames):
-                frame_img = self.draw_animated_scene_frame(
-                    action_type=scene.get("action_type", "standup_mic"),
+                frame_img = self.draw_casually_explained_frame(
                     headline=scene.get("headline", ""),
-                    demo_element=scene.get("demonstration_element", "none"),
                     narration_text=scene.get("narration", ""),
+                    diagram_type=scene.get("diagram_type", "graph"),
                     frame_num=f,
-                    total_frames=total_frames,
-                    style=style
+                    total_frames=total_frames
                 )
                 frame_path = os.path.join(frame_dir, f"frame_{f:04d}.png")
                 frame_img.save(frame_path)
@@ -332,9 +327,9 @@ Format: JSON strictly.
         ]
         subprocess.run(cmd_concat, check=True)
 
-        print(f"✅ Stand-Up Comedy Stickman Video created: {final_output_mp4}")
+        print(f"✅ Casually Explained Video created: {final_output_mp4}")
         return final_output_mp4
 
 if __name__ == "__main__":
     generator = StickmanGenerator()
-    generator.create_stickman_video("How to Create Stickman Stand Up Videos")
+    generator.create_stickman_video("Casually Explained: Quantum Physics")
