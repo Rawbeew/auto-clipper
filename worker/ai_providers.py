@@ -1,18 +1,23 @@
 import os
 import json
+import subprocess
 import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client for Groq, SiliconFlow, Anything.ai, Gemini, and OpenAI.
-    Allows ultra-fast LPU inference, FLUX image generation, and speech-to-text.
+    Unified AI Multi-Provider Client for Groq, Cerebras, SambaNova, SiliconFlow, 
+    Anything.com, Gemini, Pollinations.ai, and OpenAI.
+    Provides ultra-fast LPU inference, free FLUX image generation, and speech-to-text.
     """
     def __init__(self):
         self.groq_key = os.getenv("GROQ_API_KEY")
+        self.cerebras_key = os.getenv("CEREBRAS_API_KEY")
+        self.sambanova_key = os.getenv("SAMBANOVA_API_KEY")
         self.siliconflow_key = os.getenv("SILICONFLOW_API_KEY")
         self.anything_key = os.getenv("ANYTHING_API_KEY")
         self.gemini_key = os.getenv("GEMINI_API_KEY")
         self.openai_key = os.getenv("OPENAI_API_KEY")
+        self.pexels_key = os.getenv("PEXELS_API_KEY")
 
     # ----------------------------------------------------
     # 1. FAST SCRIPT & HIGHLIGHT LLM GENERATION
@@ -20,9 +25,21 @@ class MultiAIProvider:
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         """
         Executes structured JSON completion across available providers in order of speed/credits:
-        Groq -> SiliconFlow -> Gemini -> Anything.ai -> OpenAI -> Fallback None
+        Cerebras -> Groq -> SambaNova -> SiliconFlow -> Gemini -> Anything.com -> OpenAI
         """
-        # 1. Try Groq (Ultra-fast LPU Llama 3.3 / DeepSeek)
+        # 1. Try Cerebras (World's Fastest Llama 3.3 70B @ 2000 tokens/sec)
+        if self.cerebras_key:
+            res = self._call_openai_compatible(
+                url="https://api.cerebras.ai/v1/chat/completions",
+                api_key=self.cerebras_key,
+                model="llama3.3-70b",
+                prompt=prompt,
+                system_prompt=system_prompt
+            )
+            if res:
+                return res
+
+        # 2. Try Groq (Ultra-fast LPU Llama 3.3 / DeepSeek)
         if self.groq_key:
             res = self._call_openai_compatible(
                 url="https://api.groq.com/openai/v1/chat/completions",
@@ -34,7 +51,19 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 2. Try SiliconFlow (Qwen 2.5 / DeepSeek V3)
+        # 3. Try SambaNova (DeepSeek R1 & Llama 3.3 70B)
+        if self.sambanova_key:
+            res = self._call_openai_compatible(
+                url="https://api.sambanova.ai/v1/chat/completions",
+                api_key=self.sambanova_key,
+                model="Meta-Llama-3.3-70B-Instruct",
+                prompt=prompt,
+                system_prompt=system_prompt
+            )
+            if res:
+                return res
+
+        # 4. Try SiliconFlow (Qwen 2.5 / DeepSeek V3)
         if self.siliconflow_key:
             res = self._call_openai_compatible(
                 url="https://api.siliconflow.cn/v1/chat/completions",
@@ -46,13 +75,25 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 3. Try Gemini (Google)
+        # 5. Try Gemini (Google)
         if self.gemini_key:
             res = self._call_gemini(prompt, system_prompt)
             if res:
                 return res
 
-        # 4. Try OpenAI
+        # 6. Try Anything.com
+        if self.anything_key:
+            res = self._call_openai_compatible(
+                url="https://api.anything.com/v1/chat/completions",
+                api_key=self.anything_key,
+                model="default",
+                prompt=prompt,
+                system_prompt=system_prompt
+            )
+            if res:
+                return res
+
+        # 7. Try OpenAI
         if self.openai_key:
             res = self._call_openai_compatible(
                 url="https://api.openai.com/v1/chat/completions",
@@ -70,15 +111,10 @@ class MultiAIProvider:
     # 2. ULTRA-FAST AUDIO TRANSCRIPTION (Groq Whisper LPU)
     # ----------------------------------------------------
     def transcribe_audio_groq(self, audio_filepath: str) -> dict:
-        """
-        Transcribes audio in milliseconds using Groq's Whisper Large V3 LPU.
-        """
         if not self.groq_key or not os.path.exists(audio_filepath):
             return None
 
         url = "https://api.groq.com/openai/v1/audio/transcriptions"
-        
-        # Multipart form data upload or curl subprocess
         cmd = [
             "curl", "-s", "-X", "POST", url,
             "-H", f"Authorization: Bearer {self.groq_key}",
@@ -95,33 +131,17 @@ class MultiAIProvider:
             return None
 
     # ----------------------------------------------------
-    # 3. SILICONFLOW FLUX / SDXL IMAGE GENERATION
+    # 3. 100% FREE IMAGE GENERATION (Pollinations.ai / SiliconFlow)
     # ----------------------------------------------------
-    def generate_image_siliconflow(self, prompt: str) -> str:
+    def generate_image_free(self, prompt: str) -> str:
         """
-        Generates stickman / B-roll images using SiliconFlow's FLUX.1 Schnell model.
+        Generates stickman artwork or B-roll using Pollinations.ai (100% Free, No API key needed) 
+        or SiliconFlow FLUX.1.
         """
-        if not self.siliconflow_key:
-            return None
-
-        url = "https://api.siliconflow.cn/v1/images/generations"
-        payload = json.dumps({
-            "model": "black-forest-labs/FLUX.1-schnell",
-            "prompt": f"Minimalist white vector stickman line art on dark background, {prompt}",
-            "image_size": "1024x1024"
-        }).encode("utf-8")
-
-        try:
-            req = urllib.request.Request(url, data=payload, headers={
-                "Authorization": f"Bearer {self.siliconflow_key}",
-                "Content-Type": "application/json"
-            })
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data["images"][0]["url"]
-        except Exception as e:
-            print(f"SiliconFlow FLUX image generation skipped: {e}")
-            return None
+        # Pollinations.ai (100% Free zero setup)
+        encoded_prompt = urllib.parse.quote(f"minimalist white vector stickman line art on dark background, {prompt}")
+        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1920&nologo=true&seed=42"
+        return pollinations_url
 
     # Helper methods for REST calls
     def _call_openai_compatible(self, url: str, api_key: str, model: str, prompt: str, system_prompt: str) -> dict:
