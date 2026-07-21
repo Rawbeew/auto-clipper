@@ -5,8 +5,8 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client optimized for Groq LPU, SiliconFlow, 
-    Cerebras, Gemini 2.0, Anything.com, and OpenAI.
+    Unified AI Multi-Provider Client optimized for Groq LPU, Cerebras, 
+    SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
     Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
@@ -20,10 +20,10 @@ class MultiAIProvider:
 
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         """
-        Runs completion using Groq LPU as primary provider, falling back down the stack.
-        Order: Groq Llama 3.3 -> Cerebras -> SiliconFlow -> Gemini -> Anything.com -> OpenAI
+        Runs completion across providers in order of speed and available credits:
+        Groq LPU -> Cerebras -> SiliconFlow -> Gemini 2.0 -> Anything.com -> OpenAI
         """
-        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B)
+        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B & DeepSeek R1)
         if self.groq_key:
             res = self._call_openai_compatible(
                 url="https://api.groq.com/openai/v1/chat/completions",
@@ -35,19 +35,19 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 2. Cerebras Cloud
+        # 2. Cerebras Cloud Engine
         if self.cerebras_key:
             res = self._call_openai_compatible(
                 url="https://api.cerebras.ai/v1/chat/completions",
                 api_key=self.cerebras_key,
-                model="llama3.3-70b",
+                model="gemma-4-31b",
                 prompt=prompt,
                 system_prompt=system_prompt
             )
             if res:
                 return res
 
-        # 3. SiliconFlow (Qwen 2.5)
+        # 3. SiliconFlow (Qwen 2.5 72B)
         if self.siliconflow_key:
             res = self._call_openai_compatible(
                 url="https://api.siliconflow.cn/v1/chat/completions",
@@ -59,13 +59,13 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 4. Gemini 2.0
+        # 4. Gemini 2.0 (Google)
         if self.gemini_key:
             res = self._call_gemini(prompt, system_prompt)
             if res:
                 return res
 
-        # 5. Anything.com
+        # 5. Anything.com API
         if self.anything_key:
             res = self._call_openai_compatible(
                 url="https://api.anything.com/v1/chat/completions",
@@ -77,7 +77,7 @@ class MultiAIProvider:
             if res:
                 return res
 
-        # 6. OpenAI
+        # 6. OpenAI API
         if self.openai_key:
             res = self._call_openai_compatible(
                 url="https://api.openai.com/v1/chat/completions",
