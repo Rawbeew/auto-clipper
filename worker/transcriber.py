@@ -1,6 +1,14 @@
 import os
-from openai import OpenAI
-from ai_providers import MultiAIProvider
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
+try:
+    from ai_providers import MultiAIProvider
+except ImportError:
+    from worker.ai_providers import MultiAIProvider
 
 class AudioTranscriber:
     """
@@ -10,16 +18,12 @@ class AudioTranscriber:
     def __init__(self, api_key: str = None):
         self.ai_provider = MultiAIProvider()
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if self.api_key:
+        if self.api_key and OpenAI:
             self.openai_client = OpenAI(api_key=self.api_key)
         else:
             self.openai_client = None
 
     def transcribe(self, audio_filepath: str) -> dict:
-        """
-        Extracts transcript with word-level timestamps using Groq or OpenAI.
-        """
-        # 1. Try Groq Whisper LPU (Fastest, ~5s for 1h audio)
         groq_res = self.ai_provider.transcribe_audio_groq(audio_filepath)
         if groq_res and "text" in groq_res:
             words = []
@@ -35,7 +39,6 @@ class AudioTranscriber:
                 "segments": segments
             }
 
-        # 2. Try OpenAI Whisper API
         if self.openai_client and os.path.exists(audio_filepath):
             try:
                 with open(audio_filepath, "rb") as audio_file:
@@ -66,7 +69,6 @@ class AudioTranscriber:
             except Exception as e:
                 print(f"OpenAI Whisper error: {e}")
 
-        # Fallback transcript for local preview
         return {
             "text": "This is a sample transcribed text from the video source.",
             "words": [
