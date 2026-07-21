@@ -3,16 +3,21 @@ import time
 import json
 import urllib.request
 import subprocess
+from trend_researcher import NicheTrendResearcher
 
 class TelegramBotListener:
     """
     Two-Way Interactive Telegram Bot Engine.
-    Allows users to text prompts, YouTube URLs, or commands like /make, /longform, and /research 
-    directly in Telegram, receiving the finished MP4 videos and metadata packages back in chat!
+    Features:
+    - /trending [niche] : Scrapes real-time trending content ideas for any niche.
+    - /make <prompt>   : Generates 30s stickman video & delivers MP4 + tags package.
+    - /longform <topic>: Generates 15-35 min documentary + auto-extracts 3 shorts.
+    - Raw YouTube Link : Clips horizontal videos into vertical 9:16 shorts.
     """
     def __init__(self, token: str = None):
         self.token = token or os.getenv("TELEGRAM_BOT_TOKEN")
         self.offset = 0
+        self.trend_researcher = NicheTrendResearcher()
 
     def send_message(self, chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
         if not self.token:
@@ -36,43 +41,58 @@ class TelegramBotListener:
 
         if text.startswith("/start") or text.startswith("/help"):
             welcome_msg = (
-                "🤖 *Welcome to AutoClipper Interactive AI Bot!*\n\n"
-                "Send me any command or text prompt to create video content instantly:\n\n"
-                "• *Create Stickman Short:* `/make Why do central banks print money?`\n"
-                "• *Create 15-35 Min Longform:* `/longform The Rise and Fall of Ancient Empires`\n"
-                "• *Research Niche Trends:* `/research saas_tech` or `/research legal_tax`\n"
-                "• *Clip Source Video:* Just paste any YouTube URL link directly in chat!\n"
+                "🤖 *AutoClipper Interactive AI Studio Bot*\n\n"
+                "Send me any command or text prompt to generate video packages instantly:\n\n"
+                "🔥 *Get Trending Ideas:* `/trending saas_tech`, `/trending true_crime`, `/trending finance`, `/trending legal`\n"
+                "🎨 *Create Stickman Short:* `/make Why central banks print money`\n"
+                "📹 *Create 15-35 Min Longform:* `/longform The Rise of AI Startups`\n"
+                "🔗 *Clip Long Video:* Just paste any YouTube URL link directly in chat!\n"
             )
             self.send_message(chat_id, welcome_msg)
 
-        elif text.startswith("/research"):
-            niche = text.replace("/research", "").strip() or "saas_tech"
-            self.send_message(chat_id, f"🔍 *Scraping real-time web signals and high-RPM concepts for niche:* `{niche}`...")
+        elif text.startswith("/trending") or text.startswith("/ideas"):
+            parts = text.split(maxsplit=1)
+            niche = parts[1].strip() if len(parts) > 1 else "saas_tech"
+
+            self.send_message(chat_id, f"🔍 *Scraping live web trends and calculating virality metrics for:* `{niche}`...")
             
-            cmd = ["python", "worker/main.py", "--research", niche]
             try:
-                out = subprocess.check_output(cmd).decode("utf-8")
-                self.send_message(chat_id, f"📈 *Live Trend Research Report:*\n```json\n{out[:3000]}\n```")
+                report = self.trend_researcher.research_niche_trends(niche)
+                ideas = report.get("viral_research_ideas", [])
+
+                formatted_msg = f"🔥 *DAILY TRENDING CONTENT IDEAS FOR:* `{niche.upper()}`\n\n"
+                for i, idea in enumerate(ideas[:3]):
+                    formatted_msg += (
+                        f"*{i+1}. {idea.get('concept_title', 'Viral Idea')}*\n"
+                        f"💵 *Estimated CPM:* {idea.get('estimated_cpm_range', '$15-$35 CPM')}\n"
+                        f"📌 *Format:* {idea.get('recommended_format', 'Short / Longform')}\n"
+                        f"💡 *Hook Angle:* {idea.get('hook_angle', 'Curiosity Gap')}\n"
+                        f"🚀 *Quick Trigger:* `/make {idea.get('concept_title', '')}`\n\n"
+                    )
+
+                formatted_msg += "👉 *Copy any quick trigger command above and reply in chat to generate the video!*"
+                self.send_message(chat_id, formatted_msg)
+
             except Exception as e:
-                self.send_message(chat_id, f"⚠️ Research Error: {e}")
+                self.send_message(chat_id, f"⚠️ Error fetching trend ideas: {e}")
 
         elif text.startswith("/longform"):
-            topic = text.replace("/longform", "").strip() or "The Untold History of Artificial Intelligence"
+            topic = text.replace("/longform", "").strip() or "The History of Artificial Intelligence"
             self.send_message(chat_id, f"🎬 *Initiating 15-Minute Longform Documentary Build for:* \"{topic}\"\n\n⚡ *Status:* Groq LPU 5-chapter scriptwriting & multi-character rendering in progress...")
 
             cmd = ["python", "worker/main.py", "--longform", "--topic", topic, "--minutes", "15"]
             try:
-                subprocess.Popen(cmd) # Background process execution
+                subprocess.Popen(cmd)
                 self.send_message(chat_id, "⚙️ *Pipeline Dispatched!* The full 16:9 documentary + 3 auto-cut promo shorts will be delivered to this chat as soon as rendering completes.")
             except Exception as e:
                 self.send_message(chat_id, f"⚠️ Execution Error: {e}")
 
-        else: # Default: Treat as Stickman Short prompt or YouTube URL
+        else:
             clean_prompt = text.replace("/make", "").strip()
             if not clean_prompt:
                 clean_prompt = "Why do central banks print money?"
 
-            self.send_message(chat_id, f"🎨 *Generating Animated Stickman Short for:* \"{clean_prompt}\"\n\n⚡ *Status:* Groq LPU Llama 3.3 scriptwriting + OpenAI Onyx voice synthesis...")
+            self.send_message(chat_id, f"🎨 *Generating Animated Stickman Short for:* \"{clean_prompt}\"\n\n⚡ *Status:* Groq LPU scriptwriting + OpenAI Onyx voice synthesis...")
 
             if clean_prompt.startswith("http://") or clean_prompt.startswith("https://"):
                 cmd = ["python", "worker/main.py", "--url", clean_prompt]
@@ -86,9 +106,6 @@ class TelegramBotListener:
                 self.send_message(chat_id, f"⚠️ Execution Error: {e}")
 
     def poll_updates(self):
-        """
-        Runs continuous long-polling loop to receive messages sent to the bot.
-        """
         if not self.token:
             print("TELEGRAM_BOT_TOKEN missing. Listener idle.")
             return
