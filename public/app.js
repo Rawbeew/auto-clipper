@@ -17,17 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let generatedClips = [
     {
       id: "clip-tg-101",
-      title: "Stickman: Why Sleep Is Important",
+      title: "Why You Forget 90% of Your Dreams in 5 Minutes",
       viralityScore: 98,
       duration: "00:32",
       aspectRatio: "9:16",
       hookText: "What happens to your brain when you skip sleep?",
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      hashtags: "#Shorts #Dreams #BrainSecrets #FYP #Viral #DidYouKnow",
       platforms: {
         telegram: { status: "sent", link: "Telegram Channel" },
-        youtube: { status: "posted", link: "#" },
-        tiktok: { status: "posted", link: "#" },
-        instagram: { status: "posted", link: "#" }
+        discord: { status: "sent", link: "Discord Channel" },
+        youtube: { status: "skipped" },
+        tiktok: { status: "skipped" }
       },
       createdAt: "5 mins ago"
     }
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabLink.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
     panelStickman.classList.remove('hidden');
     panelLink.classList.add('hidden');
-    btnText.textContent = "Generate Video & Send to Telegram";
+    btnText.textContent = "Generate Video Package & Deliver to Telegram / Discord";
   });
 
   tabLink.addEventListener('click', () => {
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabStickman.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition";
     panelLink.classList.remove('hidden');
     panelStickman.classList.add('hidden');
-    btnText.textContent = "Clip Long Video & Send to Telegram";
+    btnText.textContent = "Clip Long Video & Deliver to Telegram / Discord";
   });
 
   pasteBtn.addEventListener('click', async () => {
@@ -64,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!generatedClips.length) {
       clipsGrid.innerHTML = `
         <div class="col-span-full py-12 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
-          No generated videos yet. Enter a topic or URL above!
+          No generated video packages yet. Enter a topic or URL above!
         </div>
       `;
       return;
@@ -91,22 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <h3 class="font-bold text-sm text-slate-100 line-clamp-1">${clip.title}</h3>
             <p class="text-xs text-indigo-300/90 mt-1 italic line-clamp-2">"${clip.hookText}"</p>
+            <div class="mt-2 bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px] text-sky-400 font-mono line-clamp-1">
+              ${clip.hashtags}
+            </div>
           </div>
 
           <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-            <span class="text-slate-400 font-medium">Destinations:</span>
+            <span class="text-slate-400 font-medium">Delivered To:</span>
             <div class="flex items-center space-x-1.5">
               <span title="Telegram: ${clip.platforms.telegram?.status}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                TG ✓
+                TG Sent
               </span>
-              <span title="YouTube Shorts: ${clip.platforms.youtube?.status}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
-                YT ✓
-              </span>
-              <span title="TikTok: ${clip.platforms.tiktok?.status}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                TT ✓
-              </span>
-              <span title="Instagram: ${clip.platforms.instagram?.status}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-pink-500/20 text-pink-400 border border-pink-500/30">
-                IG ✓
+              <span title="Discord: ${clip.platforms.discord?.status}" class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                DC Sent
               </span>
             </div>
           </div>
@@ -132,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
     const jobBadge = document.getElementById('jobBadge');
-    jobBadge.textContent = "Rendering";
+    jobBadge.textContent = "Processing";
     jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 animate-pulse";
 
     try {
@@ -144,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         captionTheme: document.getElementById('captionTheme').value,
         postPlatforms: {
           telegram: document.getElementById('postTelegram').checked,
+          discord: document.getElementById('postDiscord').checked,
           youtube: document.getElementById('postYouTube').checked,
           tiktok: document.getElementById('postTikTok').checked,
           instagram: document.getElementById('postInstagram').checked
@@ -173,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { num: 1, text: "Scriptwriting via Groq LPU Llama 3.3...", pct: 20 },
       { num: 2, text: "Rendering vector stickman scene frames...", pct: 40 },
       { num: 3, text: "Synthesizing OpenAI Onyx voiceover narration...", pct: 60 },
-      { num: 4, text: "FFmpeg 9:16 vertical video compilation...", pct: 80 },
-      { num: 5, text: "Transmitting MP4 directly to Telegram DM...", pct: 100 }
+      { num: 4, text: "Formatting CTR Title, Description & SEO Tags...", pct: 80 },
+      { num: 5, text: "Transmitting MP4 + Package directly to Telegram & Discord...", pct: 100 }
     ];
 
     clearInterval(pollInterval);
@@ -206,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         jobBadge.textContent = "Delivered";
         jobBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30";
-        stepLabel.textContent = "Done! MP4 delivered directly to Telegram.";
+        stepLabel.textContent = "Done! Video package delivered to Telegram & Discord.";
 
         generatedClips.unshift({
           id: `clip-tg-${Date.now()}`,
@@ -214,13 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
           viralityScore: 99,
           duration: "00:30",
           aspectRatio: "9:16",
-          hookText: `Video delivered to Telegram DM`,
+          hookText: `Full package delivered with tags`,
+          hashtags: "#Shorts #FYP #Viral #Animation #DidYouKnow",
           videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
           platforms: {
             telegram: { status: "sent", link: "Telegram" },
-            youtube: { status: "posted", link: "#" },
-            tiktok: { status: "posted", link: "#" },
-            instagram: { status: "posted", link: "#" }
+            discord: { status: "sent", link: "Discord" }
           },
           createdAt: "Just now"
         });
