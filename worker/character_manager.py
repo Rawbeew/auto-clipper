@@ -4,8 +4,13 @@ from PIL import ImageDraw, ImageFont
 
 class CharacterManager:
     """
-    Manages permanent character locking & mascot continuity for all generated videos.
-    Preserves character identity (glasses, hats, ties, hair, accessories) across all scenes.
+    Manages permanent character locking & automated niche-based mascot selection.
+    Maps categories dynamically:
+    - Finance / Tax / Legal -> Tax Advisor (Glasses & Tie)
+    - Crime / Heists / Mystery -> Detective Noir (Fedora & Lens)
+    - Science / Physics -> Lab Scientist (Lab Goggles)
+    - Tech / AI / SaaS -> Tech Trader (Sunglasses)
+    - History / Military / General -> Casually Explained (Classic MS Paint face)
     """
     def __init__(self, config_path="character_config.json"):
         self.config_path = config_path
@@ -51,7 +56,22 @@ class CharacterManager:
                 "description": "Stickman with dark sunglasses, gold chain, and cash stacks."
             }
         }
-        self.load_config()
+
+    def auto_select_mascot_by_topic(self, topic: str) -> str:
+        """
+        Auto-selects character mascot matching the topic's niche.
+        """
+        t_lower = topic.lower()
+        if any(w in t_lower for w in ["tax", "finance", "money", "bank", "legal", "law", "s-corp", "income"]):
+            return "tax_advisor"
+        elif any(w in t_lower for w in ["crime", "heist", "fbi", "unsolved", "murder", "detective", "mystery"]):
+            return "detective_noir"
+        elif any(w in t_lower for w in ["quantum", "physics", "science", "brain", "dopamine", "sleep", "doctor", "lab"]):
+            return "scientist_lab"
+        elif any(w in t_lower for w in ["ai", "saas", "software", "tech", "crypto", "bitcoin", "startup"]):
+            return "crypto_trader"
+        else:
+            return "casually_explained"
 
     def load_config(self) -> dict:
         if os.path.exists(self.config_path):
@@ -61,12 +81,10 @@ class CharacterManager:
             except Exception:
                 pass
         
-        # Default character: Casually Explained
         default_cfg = {
-            "active_character_id": "casually_explained",
+            "active_character_id": "auto",
             "character_data": self.preset_characters["casually_explained"]
         }
-        self.save_config(default_cfg)
         return default_cfg
 
     def save_config(self, cfg: dict):
@@ -81,32 +99,38 @@ class CharacterManager:
                 "character_data": self.preset_characters[char_id]
             }
             self.save_config(cfg)
-            print(f"🔒 Character successfully locked onto: '{self.preset_characters[char_id]['name']}'")
+            print(f"🔒 Character permanently locked onto: '{self.preset_characters[char_id]['name']}'")
             return cfg
         return self.load_config()
 
-    def draw_locked_accessories(self, draw: ImageDraw.Draw, cx: int, head_cy: int, head_r: int, stroke_color=(15, 23, 42)):
-        """
-        Draws locked character features (glasses, fedora hat, goggles, ties) onto stickman head.
-        """
+    def get_character_for_topic(self, topic: str) -> dict:
         cfg = self.load_config()
-        char = cfg.get("character_data", self.preset_characters["casually_explained"])
+        active_id = cfg.get("active_character_id", "auto")
 
-        # 1. Glasses / Sunglasses / Goggles
+        # If manually locked to specific mascot ID (not 'auto')
+        if active_id in self.preset_characters and active_id != "auto":
+            return self.preset_characters[active_id]
+
+        # Auto-select based on topic niche
+        auto_id = self.auto_select_mascot_by_topic(topic)
+        return self.preset_characters[auto_id]
+
+    def draw_locked_accessories(self, draw: ImageDraw.Draw, cx: int, head_cy: int, head_r: int, topic: str = "", stroke_color=(15, 23, 42)):
+        char = self.get_character_for_topic(topic)
+
+        # Glasses / Sunglasses / Goggles
         if char.get("hat") == "sunglasses":
-            # Solid dark sunglasses
             draw.rectangle([cx - 45, head_cy - 15, cx - 5, head_cy + 15], fill=stroke_color)
             draw.rectangle([cx + 5, head_cy - 15, cx + 45, head_cy + 15], fill=stroke_color)
             draw.line([cx - 5, head_cy - 5, cx + 5, head_cy - 5], fill=stroke_color, width=5)
 
         elif char.get("glasses") or char.get("hat") == "lab_goggles":
-            # Spectacles / Goggles
             g_col = (56, 189, 248) if char.get("hat") == "lab_goggles" else stroke_color
             draw.rectangle([cx - 40, head_cy - 20, cx - 5, head_cy + 15], outline=g_col, width=5)
             draw.rectangle([cx + 5, head_cy - 20, cx + 40, head_cy + 15], outline=g_col, width=5)
             draw.line([cx - 5, head_cy - 5, cx + 5, head_cy - 5], fill=g_col, width=5)
 
-        # 2. Hats / Fedoras
+        # Fedora Hat
         if char.get("hat") == "fedora":
             fill_c = char.get("accent_color", (225, 29, 72))
             draw.polygon([
@@ -116,7 +140,7 @@ class CharacterManager:
                 (cx - 60, head_cy - head_r - 50)
             ], fill=fill_c, outline=stroke_color)
 
-        # 3. Ties
+        # Tie
         if char.get("tie"):
             tie_col = char.get("accent_color", (225, 29, 72))
             neck_y = head_cy + head_r
@@ -127,7 +151,3 @@ class CharacterManager:
                 (cx, neck_y + 120),
                 (cx - 18, neck_y + 90)
             ], fill=tie_col, outline=stroke_color)
-
-if __name__ == "__main__":
-    mgr = CharacterManager()
-    mgr.set_locked_character("tax_advisor")
