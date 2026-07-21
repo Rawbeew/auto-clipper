@@ -1,13 +1,12 @@
 name: AutoClipper Serverless Pipeline
 
 on:
-  # 1. Trigger manually from GitHub Actions UI
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'Source Video URL (YouTube / Direct MP4)'
+        description: 'Source Video URL or Stickman Topic Prompt'
         required: true
-        default: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        default: 'Why do we dream?'
       max_clips:
         description: 'Max Shorts to create (1-5)'
         required: false
@@ -17,17 +16,14 @@ on:
         required: false
         default: 'submagic'
 
-  # 2. Trigger via Cloudflare Pages Web UI (repository_dispatch API call)
   repository_dispatch:
     types: [make_short]
 
-  # 3. Trigger by creating a GitHub Issue
   issues:
     types: [opened, labeled]
 
 jobs:
   clip-and-post:
-    # Run if manual dispatch, repo dispatch, or labeled issue
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'repository_dispatch' ||
@@ -56,32 +52,40 @@ jobs:
 
       - name: Run AutoClipper Pipeline
         env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          ANYTHING_API_KEY: ${{ secrets.ANYTHING_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           YOUTUBE_OAUTH_TOKEN: ${{ secrets.YOUTUBE_OAUTH_TOKEN }}
           TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
         run: |
-          # Determine source input parameters
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            URL="${{ github.event.inputs.video_url }}"
+            INPUT_TEXT="${{ github.event.inputs.video_url }}"
             CLIPS="${{ github.event.inputs.max_clips }}"
             THEME="${{ github.event.inputs.caption_theme }}"
           elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            URL="${{ github.event.client_payload.video_url }}"
+            INPUT_TEXT="${{ github.event.client_payload.video_url }}"
             CLIPS="${{ github.event.client_payload.max_clips }}"
             THEME="${{ github.event.client_payload.caption_theme }}"
           else
-            URL="${{ github.event.issue.body }}"
+            INPUT_TEXT="${{ github.event.issue.body }}"
             CLIPS="3"
             THEME="submagic"
           fi
 
           echo "==============================================="
-          echo "Processing Video Short Pipeline for: $URL"
+          echo "Processing Video Short Pipeline for: $INPUT_TEXT"
           echo "Clips Count: $CLIPS | Theme: $THEME"
           echo "==============================================="
 
-          python worker/main.py --url "$URL" --clips "$CLIPS" --theme "$THEME"
+          # Check if input is a URL or a topic prompt for Stickman generator
+          if [[ "$INPUT_TEXT" =~ ^https?:// ]]; then
+            python worker/main.py --url "$INPUT_TEXT" --clips "$CLIPS" --theme "$THEME"
+          else
+            python worker/main.py --stickman --topic "$INPUT_TEXT" --theme "$THEME"
+          fi
 
       - name: Post Comment on Issue
         if: github.event_name == 'issues'
@@ -92,5 +96,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "🎉 **AutoClipper Complete!** Your video shorts have been extracted, cropped to 9:16 vertical, and submitted to YouTube Shorts, TikTok, and Instagram Reels."
+              body: "🎉 **AutoClipper Complete!** Your video has been rendered and automatically submitted to YouTube Shorts, TikTok, and Instagram Reels."
             })

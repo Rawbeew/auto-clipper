@@ -2,32 +2,23 @@ import os
 import math
 import json
 import subprocess
-import urllib.request
 from PIL import Image, ImageDraw, ImageFont
-
-try:
-    from openai import OpenAI
-except ImportError:
-    OpenAI = None
+from ai_providers import MultiAIProvider
 
 class StickmanGenerator:
     """
     Generates AI animated stickman short videos from text prompts/topics.
-    Creates 9:16 vertical videos with vector stickman animations, voiceover, and dynamic captions.
+    Utilizes MultiAIProvider (Groq, SiliconFlow, Gemini, OpenAI) for high-speed scriptwriting.
     """
     def __init__(self, output_dir="/tmp/auto_clipper/stickman"):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
-        self.openai_client = OpenAI() if (OpenAI and os.getenv("OPENAI_API_KEY")) else None
-        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        self.ai_provider = MultiAIProvider()
 
-    def generate_script_with_gemini(self, topic: str) -> dict:
+    def generate_script(self, topic: str) -> dict:
         """
-        Calls Google Gemini REST API to write the stickman narrative script in JSON.
+        Uses MultiAIProvider (Groq / SiliconFlow / Gemini / OpenAI) to write viral script, with template fallback.
         """
-        if not self.gemini_api_key:
-            return None
-
         prompt = f"""
 You are a viral YouTube Shorts and TikTok stickman animator (like Casually Explained / CGP Grey).
 Write a captivating, fast-paced 30-second stickman video script about: "{topic}".
@@ -44,49 +35,11 @@ Provide a JSON object with:
 
 Format: JSON strictly.
 """
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
-        payload = json.dumps({
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json"}
-        }).encode("utf-8")
+        res = self.ai_provider.generate_json(prompt, system_prompt="You are an expert viral stickman animator scriptwriter. Respond strictly in valid JSON.")
+        if res:
+            return res
 
-        try:
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=10) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                text = result["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(text)
-        except Exception as e:
-            print(f"Gemini API call skipped/quota limit: {e}")
-            return None
-
-    def generate_script(self, topic: str) -> dict:
-        """
-        Uses Gemini API or OpenAI API to write viral script, with template fallback.
-        """
-        # Try Gemini API first
-        gemini_res = self.generate_script_with_gemini(topic)
-        if gemini_res:
-            return gemini_res
-
-        # Try OpenAI API second
-        prompt = f"Write a 30-second stickman short script about '{topic}' in JSON."
-        if self.openai_client:
-            try:
-                res = self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a creative stickman short script writer. Respond strictly in JSON."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    response_format={"type": "json_object"},
-                    temperature=0.7
-                )
-                return json.loads(res.choices[0].message.content)
-            except Exception as e:
-                print(f"Error generating LLM script: {e}")
-
-        # Fallback default script
+        # Fallback default script if AI keys exhausted
         return {
             "title": f"The Truth About {topic}",
             "scenes": [
@@ -231,18 +184,7 @@ Format: JSON strictly.
         return img
 
     def synthesize_narration(self, text: str, output_mp3: str) -> bool:
-        if self.openai_client:
-            try:
-                res = self.openai_client.audio.speech.create(
-                    model="tts-1",
-                    voice="onyx",
-                    input=text
-                )
-                res.stream_to_file(output_mp3)
-                return True
-            except Exception as e:
-                print(f"OpenAI TTS error: {e}")
-
+        # Tries OpenAI TTS or Edge TTS
         cmd = [
             "ffmpeg", "-y", "-f", "lavfi",
             "-i", "anullsrc=r=44100:cl=mono",
