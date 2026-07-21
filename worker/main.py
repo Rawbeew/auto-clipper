@@ -14,8 +14,9 @@ from publisher import SocialPublisher
 from stickman_generator import StickmanGenerator
 from trend_researcher import NicheTrendResearcher
 from longform_generator import LongformNarrativeEngine
+from youtube_algorithm_cracker import YouTubeAlgorithmCracker
 
-app = FastAPI(title="AutoClipper Complete Media Engine", version="2.0.0")
+app = FastAPI(title="AutoClipper Complete Algorithmic Media Engine", version="3.0.0")
 
 class PipelineRequest(BaseModel):
     jobId: str
@@ -23,7 +24,7 @@ class PipelineRequest(BaseModel):
     videoUrl: str = None
     ideaPrompt: str = None
     targetMinutes: int = 15
-    niche: str = "science"
+    niche: str = "saas_tech"
     maxClips: int = 3
     aspectRatio: str = "9:16"
     captionTheme: str = "submagic"
@@ -37,26 +38,32 @@ publisher = SocialPublisher()
 stickman_gen = StickmanGenerator()
 trend_researcher = NicheTrendResearcher()
 longform_engine = LongformNarrativeEngine()
+algo_cracker = YouTubeAlgorithmCracker()
 
 def process_pipeline_job(request: PipelineRequest):
-    print(f"=== Starting Processing Job: {request.jobId} (Mode: {request.mode}) ===")
+    print(f"=== Starting Algorithmic Job: {request.jobId} (Mode: {request.mode}) ===")
     rendered_shorts = []
+
+    # 1. OPTIMIZE METRICS WITH YOUTUBE ALGORITHM CRACKER
+    topic = request.ideaPrompt or request.videoUrl or "High-RPM Technology Secrets"
+    algo_data = algo_cracker.optimize_video_for_algorithm(topic, content_type=request.mode)
+    
+    ctr_title = algo_data.get("ctr_titles", [topic])[0]
+    seo_hashtags = " ".join([f"#{t.replace(' ', '')}" for t in algo_data.get("youtube_seo_tags", ["Shorts", "Viral"])[:6]])
 
     # MODE A: LONG-FORM DOCUMENTARY GENERATOR (15 to 35 Minutes 16:9)
     if request.mode == "longform":
-        topic = request.ideaPrompt or "The History of Artificial Intelligence"
-        print(f"🎬 Initiating {request.targetMinutes}-Minute Long-Form Narrative Build for '{topic}'...")
+        print(f"🎬 Initiating {request.targetMinutes}-Minute Long-Form Narrative Build for '{ctr_title}'...")
         doc_res = longform_engine.create_longform_documentary(topic, request.targetMinutes)
 
-        # Build YouTube description with Chapter Timestamps
         longform_description = (
-            f"An in-depth documentary exploring {topic}.\n\n"
-            f"📌 CHAPTER TIMESTAMPS:\n{doc_res['youtube_chapters']}\n\n"
-            f"🔔 Subscribe for weekly animated science and technology mini-documentaries!"
+            f"🎯 OPTIMIZED CTR TITLE: {ctr_title}\n\n"
+            f"⚡ 0-3s HOOK: {algo_data.get('pattern_interrupt_hook', '')}\n\n"
+            f"📌 YOUTUBE CHAPTER TIMESTAMPS:\n{doc_res['youtube_chapters']}\n\n"
+            f"🏷️ SEO TAGS:\n{seo_hashtags}\n\n"
+            f"🔔 Subscribe for weekly high-retention documentaries!"
         )
 
-        print("Delivering Long-Form Documentary package & chapter timestamps to Telegram & Discord...")
-        # Simulated or live render output path
         longform_file = os.path.join(longform_engine.output_dir, f"{request.jobId}_longform.mp4")
         if not os.path.exists(longform_file):
             with open(longform_file, "wb") as f:
@@ -64,19 +71,18 @@ def process_pipeline_job(request: PipelineRequest):
 
         publish_results = publisher.publish_clip(
             video_path=longform_file,
-            title=doc_res["title"],
+            title=ctr_title,
             description=longform_description,
             platforms=request.postPlatforms,
             virality_score=99
         )
 
-        # ALSO AUTOMATICALLY EXTRACT 3 PROMO SHORTS FROM THIS LONGFORM TOPIC!
         print("⚡ Automatically cutting 3 promo shorts from long-form story for TikTok / YouTube Shorts...")
         short_file = stickman_gen.create_stickman_video(f"Quick Facts: {topic}")
         publisher.publish_clip(
             video_path=short_file,
-            title=f"The Short Version: {topic[:25]}",
-            description=f"Watch the full 15-minute documentary on our main channel!",
+            title=f"Promo: {ctr_title[:25]}",
+            description=f"Watch the full {request.targetMinutes}-minute documentary on our main channel! {seo_hashtags}",
             platforms=request.postPlatforms,
             virality_score=98
         )
@@ -85,27 +91,31 @@ def process_pipeline_job(request: PipelineRequest):
 
     # MODE B: TREND RESEARCH
     elif request.mode == "research":
-        research_results = trend_researcher.research_niche_trends(request.niche)
-        return research_results
+        return trend_researcher.research_niche_trends(request.niche)
 
-    # MODE C: ANIMATED STICKMAN SHORT
+    # MODE C: ANIMATED STICKMAN SHORT (9:16)
     elif request.mode == "stickman" or (request.ideaPrompt and "stickman" in request.ideaPrompt.lower()):
-        topic = request.ideaPrompt or "Curious Science Facts"
         short_file = stickman_gen.create_stickman_video(topic)
+
+        short_description = (
+            f"⚡ 0-3s Pattern Interrupt: \"{algo_data.get('pattern_interrupt_hook', '')}\"\n\n"
+            f"🔄 Seamless Loop Phrase: \"{algo_data.get('seamless_loop_phrase', '')}\"\n\n"
+            f"🏷️ SEO Tags: {seo_hashtags}"
+        )
 
         publish_results = publisher.publish_clip(
             video_path=short_file,
-            title=f"Stickman: {topic[:30]}",
-            description=f"Watch this quick animated stickman video about {topic}! #Shorts #Animation",
+            title=ctr_title,
+            description=short_description,
             platforms=request.postPlatforms,
-            virality_score=97
+            virality_score=98
         )
 
         rendered_shorts.append({
             "clipId": f"{request.jobId}_stickman",
-            "title": f"Stickman Animation: {topic}",
-            "hookText": f"Stickman animated story on {topic}",
-            "viralityScore": 97,
+            "title": ctr_title,
+            "hookText": algo_data.get("pattern_interrupt_hook", ""),
+            "viralityScore": 98,
             "filePath": short_file,
             "publishResults": publish_results
         })
@@ -116,7 +126,7 @@ def process_pipeline_job(request: PipelineRequest):
             download_data = downloader.download(request.videoUrl)
             video_file = download_data["filepath"]
         else:
-            video_file = stickman_gen.create_stickman_video(request.ideaPrompt or "AI Trends")
+            video_file = stickman_gen.create_stickman_video(topic)
 
         transcript_data = transcriber.transcribe(video_file)
         highlights = highlight_detector.find_highlights(transcript_data, max_clips=request.maxClips)
@@ -135,7 +145,7 @@ def process_pipeline_job(request: PipelineRequest):
             publish_results = publisher.publish_clip(
                 video_path=short_file,
                 title=highlight["title"],
-                description=highlight["hook_text"],
+                description=f"{highlight['hook_text']}\n\n{seo_hashtags}",
                 platforms=request.postPlatforms,
                 virality_score=highlight.get("virality_score", 95)
             )
@@ -149,7 +159,7 @@ def process_pipeline_job(request: PipelineRequest):
                 "publishResults": publish_results
             })
 
-    print(f"\n✅ SUCCESS: Completed Job {request.jobId}.")
+    print(f"\n✅ SUCCESS: Completed Algorithmic Job {request.jobId}.")
     return rendered_shorts
 
 @app.post("/process")
@@ -171,7 +181,7 @@ if __name__ == "__main__":
     parser.add_argument("--topic", type=str, help="Idea prompt or topic")
     parser.add_argument("--stickman", action="store_true", help="Enable Stickman Animation mode")
     parser.add_argument("--longform", action="store_true", help="Enable 15-35 min Long-Form Documentary mode")
-    parser.add_argument("--minutes", type=int, default=15, help="Target longform video duration in minutes (15-35)")
+    parser.add_argument("--minutes", type=int, default=15, help="Target longform video duration in minutes")
     parser.add_argument("--research", type=str, help="Niche name to research trends")
     parser.add_argument("--issue-text", type=str, help="Raw GitHub issue text")
     parser.add_argument("--clips", type=int, default=3, help="Max clips to render")
