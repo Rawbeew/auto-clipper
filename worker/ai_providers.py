@@ -6,12 +6,14 @@ import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client optimized for Anthropic Claude 3.5 Sonnet, 
-    Groq LPU, Kimi, DeepSeek, Cerebras, SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
+    Unified AI Multi-Provider Client optimized for Anthropic Claude 3.5 Sonnet (#1),
+    Kimi Moonshot AI (#2), DeepSeek Native (#3), Groq LPU (#4), Cerebras (#5), 
+    SiliconFlow (#6), Gemini 2.0 (#7), Anything.com (#8), and OpenAI (#9).
     Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
         self.providers = [
+            # PRIORITY 1: Anthropic Claude 3.5 Sonnet
             {
                 "name": "Anthropic Claude 3.5 Sonnet",
                 "key": os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"),
@@ -20,14 +22,7 @@ class MultiAIProvider:
                 "type": "anthropic",
                 "cooldown_until": 0
             },
-            {
-                "name": "Groq LPU",
-                "key": os.getenv("GROQ_API_KEY"),
-                "url": "https://api.groq.com/openai/v1/chat/completions",
-                "model": "llama-3.3-70b-versatile",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
+            # PRIORITY 2: Kimi Moonshot AI
             {
                 "name": "Kimi Moonshot AI",
                 "key": os.getenv("KIMI_API_KEY"),
@@ -36,14 +31,7 @@ class MultiAIProvider:
                 "type": "openai_compatible",
                 "cooldown_until": 0
             },
-            {
-                "name": "Cerebras WSE-3",
-                "key": os.getenv("CEREBRAS_API_KEY"),
-                "url": "https://api.cerebras.ai/v1/chat/completions",
-                "model": "gemma-4-31b",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
+            # PRIORITY 3: DeepSeek Native
             {
                 "name": "DeepSeek Native",
                 "key": os.getenv("DEEPSEEK_API_KEY"),
@@ -52,6 +40,25 @@ class MultiAIProvider:
                 "type": "openai_compatible",
                 "cooldown_until": 0
             },
+            # PRIORITY 4: Groq LPU
+            {
+                "name": "Groq LPU",
+                "key": os.getenv("GROQ_API_KEY"),
+                "url": "https://api.groq.com/openai/v1/chat/completions",
+                "model": "llama-3.3-70b-versatile",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            # PRIORITY 5: Cerebras WSE-3
+            {
+                "name": "Cerebras WSE-3",
+                "key": os.getenv("CEREBRAS_API_KEY"),
+                "url": "https://api.cerebras.ai/v1/chat/completions",
+                "model": "gemma-4-31b",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            # PRIORITY 6: SiliconFlow Qwen
             {
                 "name": "SiliconFlow Qwen",
                 "key": os.getenv("SILICONFLOW_API_KEY"),
@@ -60,6 +67,7 @@ class MultiAIProvider:
                 "type": "openai_compatible",
                 "cooldown_until": 0
             },
+            # PRIORITY 7: Google Gemini 2.0
             {
                 "name": "Google Gemini 2.0",
                 "key": os.getenv("GEMINI_API_KEY"),
@@ -68,6 +76,7 @@ class MultiAIProvider:
                 "type": "gemini",
                 "cooldown_until": 0
             },
+            # PRIORITY 8: Anything.com API
             {
                 "name": "Anything.com API",
                 "key": os.getenv("ANYTHING_API_KEY"),
@@ -76,6 +85,7 @@ class MultiAIProvider:
                 "type": "openai_compatible",
                 "cooldown_until": 0
             },
+            # PRIORITY 9: OpenAI API
             {
                 "name": "OpenAI API",
                 "key": os.getenv("OPENAI_API_KEY"),
