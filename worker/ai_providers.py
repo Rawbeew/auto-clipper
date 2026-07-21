@@ -1,120 +1,167 @@
 import os
+import time
 import json
 import subprocess
 import urllib.request
 
 class MultiAIProvider:
     """
-    Unified AI Multi-Provider Client optimized for Groq LPU, DeepSeek, Cerebras, 
-    SiliconFlow, Gemini 2.0, Anything.com, and OpenAI.
-    Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
+    Resilient, Rate-Limit-Proof Auto-Switching Multi-Provider Architecture.
+    Tracks provider health states and instantly fails over upon 429 Rate Limits or Quota Errors.
+    Supported Engines: Groq LPU, Cerebras, DeepSeek, SiliconFlow, Gemini 2.0, Anything.com, OpenRouter, and OpenAI.
     """
     def __init__(self):
-        self.groq_key = os.getenv("GROQ_API_KEY")
-        self.deepseek_key = os.getenv("DEEPSEEK_API_KEY")
-        self.cerebras_key = os.getenv("CEREBRAS_API_KEY")
-        self.sambanova_key = os.getenv("SAMBANOVA_API_KEY")
-        self.siliconflow_key = os.getenv("SILICONFLOW_API_KEY")
-        self.anything_key = os.getenv("ANYTHING_API_KEY")
-        self.gemini_key = os.getenv("GEMINI_API_KEY")
-        self.openai_key = os.getenv("OPENAI_API_KEY")
+        self.providers = [
+            {
+                "name": "Groq LPU",
+                "key": os.getenv("GROQ_API_KEY"),
+                "url": "https://api.groq.com/openai/v1/chat/completions",
+                "model": "llama-3.3-70b-versatile",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "Cerebras WSE-3",
+                "key": os.getenv("CEREBRAS_API_KEY"),
+                "url": "https://api.cerebras.ai/v1/chat/completions",
+                "model": "gemma-4-31b",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "DeepSeek Native",
+                "key": os.getenv("DEEPSEEK_API_KEY"),
+                "url": "https://api.deepseek.com/chat/completions",
+                "model": "deepseek-v4-flash",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "SiliconFlow Qwen",
+                "key": os.getenv("SILICONFLOW_API_KEY"),
+                "url": "https://api.siliconflow.cn/v1/chat/completions",
+                "model": "Qwen/Qwen2.5-72B-Instruct",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "Google Gemini 2.0",
+                "key": os.getenv("GEMINI_API_KEY"),
+                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                "model": "gemini-2.0-flash",
+                "type": "gemini",
+                "cooldown_until": 0
+            },
+            {
+                "name": "Anything.com API",
+                "key": os.getenv("ANYTHING_API_KEY"),
+                "url": "https://api.anything.com/v1/chat/completions",
+                "model": "default",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            },
+            {
+                "name": "OpenAI API",
+                "key": os.getenv("OPENAI_API_KEY"),
+                "url": "https://api.openai.com/v1/chat/completions",
+                "model": "gpt-4o-mini",
+                "type": "openai_compatible",
+                "cooldown_until": 0
+            }
+        ]
 
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         """
-        Runs completion across providers in order of speed and available credits:
-        Groq LPU -> DeepSeek -> Cerebras -> SiliconFlow -> Gemini 2.0 -> Anything.com -> OpenAI
+        Attempts execution across all active non-cooldown providers.
+        Instantly auto-switches on 429, 402, or 500 errors.
         """
-        # 1. Groq LPU (Ultra-fast 0.6s Llama 3.3 70B & DeepSeek R1 Distill)
-        if self.groq_key:
-            res = self._call_openai_compatible(
-                url="https://api.groq.com/openai/v1/chat/completions",
-                api_key=self.groq_key,
-                model="llama-3.3-70b-versatile",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
+        now = time.time()
+        for p in self.providers:
+            if not p["key"]:
+                continue
 
-        # 2. Native DeepSeek API (deepseek-v4-flash / deepseek-chat)
-        if self.deepseek_key:
-            res = self._call_openai_compatible(
-                url="https://api.deepseek.com/chat/completions",
-                api_key=self.deepseek_key,
-                model="deepseek-v4-flash",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
+            if p["cooldown_until"] > now:
+                print(f"⏳ Provider '{p['name']}' is in rate-limit cooldown. Auto-switching to next...")
+                continue
 
-        # 3. Cerebras Cloud Engine
-        if self.cerebras_key:
-            res = self._call_openai_compatible(
-                url="https://api.cerebras.ai/v1/chat/completions",
-                api_key=self.cerebras_key,
-                model="gemma-4-31b",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
+            print(f"⚡ Attempting completion with provider: '{p['name']}'...")
+            
+            if p["type"] == "openai_compatible":
+                res = self._call_openai_compatible(p, prompt, system_prompt)
+            elif p["type"] == "gemini":
+                res = self._call_gemini(p, prompt, system_prompt)
+            else:
+                res = None
 
-        # 4. SiliconFlow (Qwen 2.5 72B)
-        if self.siliconflow_key:
-            res = self._call_openai_compatible(
-                url="https://api.siliconflow.cn/v1/chat/completions",
-                api_key=self.siliconflow_key,
-                model="Qwen/Qwen2.5-72B-Instruct",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
             if res:
+                print(f"✅ Success from provider: '{p['name']}'")
                 return res
+            else:
+                # Mark provider in 60-second cooldown on error
+                p["cooldown_until"] = time.time() + 60
+                print(f"⚠️ Provider '{p['name']}' failed/rate-limited. Auto-switching to next provider...")
 
-        # 5. Gemini 2.0 (Google)
-        if self.gemini_key:
-            res = self._call_gemini(prompt, system_prompt)
-            if res:
-                return res
-
-        # 6. Anything.com API
-        if self.anything_key:
-            res = self._call_openai_compatible(
-                url="https://api.anything.com/v1/chat/completions",
-                api_key=self.anything_key,
-                model="default",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
-
-        # 7. OpenAI API
-        if self.openai_key:
-            res = self._call_openai_compatible(
-                url="https://api.openai.com/v1/chat/completions",
-                api_key=self.openai_key,
-                model="gpt-4o-mini",
-                prompt=prompt,
-                system_prompt=system_prompt
-            )
-            if res:
-                return res
-
+        print("❌ All AI providers exhausted or in cooldown.")
         return None
 
+    def _call_openai_compatible(self, provider: dict, prompt: str, system_prompt: str) -> dict:
+        payload = json.dumps({
+            "model": provider["model"],
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.7
+        }).encode("utf-8")
+
+        headers = {
+            "Authorization": f"Bearer {provider['key']}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/2.0"
+        }
+
+        try:
+            req = urllib.request.Request(provider["url"], data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                content = data["choices"][0]["message"]["content"]
+                return json.loads(content)
+        except Exception as e:
+            print(f"Provider '{provider['name']}' call error: {e}")
+            return None
+
+    def _call_gemini(self, provider: dict, prompt: str, system_prompt: str) -> dict:
+        url = f"{provider['url']}?key={provider['key']}"
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\nPrompt: {prompt}"}]}],
+            "generationConfig": {"responseMimeType": "application/json"}
+        }).encode("utf-8")
+
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/2.0"
+        }
+
+        try:
+            req = urllib.request.Request(url, data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                text = data["candidates"][0]["content"]["parts"][0]["text"]
+                return json.loads(text)
+        except Exception as e:
+            print(f"Gemini API call error: {e}")
+            return None
+
     def transcribe_audio_groq(self, audio_filepath: str) -> dict:
-        """
-        Transcribes audio via Groq Whisper LPU in ~2-3 seconds.
-        """
-        if not self.groq_key or not os.path.exists(audio_filepath):
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key or not os.path.exists(audio_filepath):
             return None
 
         url = "https://api.groq.com/openai/v1/audio/transcriptions"
         cmd = [
             "curl", "-s", "-X", "POST", url,
-            "-H", f"Authorization: Bearer {self.groq_key}",
+            "-H", f"Authorization: Bearer {groq_key}",
             "-F", f"file=@{audio_filepath}",
             "-F", "model=whisper-large-v3-turbo",
             "-F", "response_format=verbose_json",
@@ -125,53 +172,4 @@ class MultiAIProvider:
             return json.loads(out)
         except Exception as e:
             print(f"Groq Whisper transcription skipped: {e}")
-            return None
-
-    def _call_openai_compatible(self, url: str, api_key: str, model: str, prompt: str, system_prompt: str) -> dict:
-        payload = json.dumps({
-            "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "response_format": {"type": "json_object"},
-            "temperature": 0.7
-        }).encode("utf-8")
-
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/1.0"
-        }
-
-        try:
-            req = urllib.request.Request(url, data=payload, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                content = data["choices"][0]["message"]["content"]
-                return json.loads(content)
-        except Exception as e:
-            print(f"API Provider call ({url}) failed: {e}")
-            return None
-
-    def _call_gemini(self, prompt: str, system_prompt: str) -> dict:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_key}"
-        payload = json.dumps({
-            "contents": [{"parts": [{"text": f"{system_prompt}\n\nPrompt: {prompt}"}]}],
-            "generationConfig": {"responseMimeType": "application/json"}
-        }).encode("utf-8")
-
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/1.0"
-        }
-
-        try:
-            req = urllib.request.Request(url, data=payload, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(text)
-        except Exception as e:
-            print(f"Gemini API failed: {e}")
             return None
