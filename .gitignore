@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.env
+.wrangler/
+tmp/
+renders/
+downloads/
+stickman/
+node_modules/
+
+# installer blobs - too large for git
+*.exe
+
+# vendored third-party toolchains (installed/downloaded at runtime)
+vendor/
