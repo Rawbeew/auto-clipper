@@ -12,89 +12,64 @@ class MultiAIProvider:
     Provides sub-second scriptwriting, speech-to-text, and vector artwork generation.
     """
     def __init__(self):
-        self.providers = [
-            # PRIORITY 1: Anthropic Claude 3.5 Sonnet
-            {
-                "name": "Anthropic Claude 3.5 Sonnet",
-                "key": os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"),
-                "url": "https://api.anthropic.com/v1/messages",
-                "model": "claude-3-5-sonnet-20241022",
-                "type": "anthropic",
-                "cooldown_until": 0
-            },
-            # PRIORITY 2: Kimi Moonshot AI
-            {
-                "name": "Kimi Moonshot AI",
-                "key": os.getenv("KIMI_API_KEY"),
-                "url": "https://api.moonshot.ai/v1/chat/completions",
-                "model": "kimi-k2.6",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 3: DeepSeek Native
-            {
-                "name": "DeepSeek Native",
-                "key": os.getenv("DEEPSEEK_API_KEY"),
-                "url": "https://api.deepseek.com/chat/completions",
-                "model": "deepseek-v4-flash",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 4: Groq LPU
-            {
-                "name": "Groq LPU",
-                "key": os.getenv("GROQ_API_KEY"),
-                "url": "https://api.groq.com/openai/v1/chat/completions",
-                "model": "llama-3.3-70b-versatile",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 5: Cerebras WSE-3
-            {
-                "name": "Cerebras WSE-3",
-                "key": os.getenv("CEREBRAS_API_KEY"),
-                "url": "https://api.cerebras.ai/v1/chat/completions",
-                "model": "gemma-4-31b",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 6: SiliconFlow Qwen
-            {
-                "name": "SiliconFlow Qwen",
-                "key": os.getenv("SILICONFLOW_API_KEY"),
-                "url": "https://api.siliconflow.cn/v1/chat/completions",
-                "model": "Qwen/Qwen2.5-72B-Instruct",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 7: Google Gemini 2.0
-            {
-                "name": "Google Gemini 2.0",
-                "key": os.getenv("GEMINI_API_KEY"),
-                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-                "model": "gemini-2.0-flash",
-                "type": "gemini",
-                "cooldown_until": 0
-            },
-            # PRIORITY 8: Anything.com API
-            {
-                "name": "Anything.com API",
-                "key": os.getenv("ANYTHING_API_KEY"),
-                "url": "https://api.anything.com/v1/chat/completions",
-                "model": "default",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            },
-            # PRIORITY 9: OpenAI API
-            {
-                "name": "OpenAI API",
-                "key": os.getenv("OPENAI_API_KEY"),
-                "url": "https://api.openai.com/v1/chat/completions",
-                "model": "gpt-4o-mini",
-                "type": "openai_compatible",
-                "cooldown_until": 0
-            }
-        ]
+            self.providers = [
+                # PRIORITY 1: Fireworks via our Cloudflare relay (key injected server-side)
+                {
+                    "name": "Fireworks Relay",
+                    "key": os.getenv("FIREWORKS_API_KEY") or "relay",
+                    "url": "https://groq-relay.rahbiew.workers.dev/inference/v1/chat/completions",
+                    "model": "accounts/fireworks/models/deepseek-v4-flash",
+                    "type": "openai_compatible",
+                    "cooldown_until": 0,
+                    "thinking_disabled": True
+                },
+                # PRIORITY 2: Groq via relay (bypasses Cloudflare 1010 datacenter ban)
+                {
+                    "name": "Groq Relay",
+                    "key": os.getenv("GROQ_API_KEY") or "relay",
+                    "url": "https://groq-relay.rahbiew.workers.dev/v1/chat/completions",
+                    "model": "llama-3.3-70b-versatile",
+                    "type": "openai_compatible",
+                    "cooldown_until": 0
+                },
+                # PRIORITY 3: SambaNova (direct, proven container-reachable)
+                {
+                    "name": "SambaNova",
+                    "key": os.getenv("SAMBA_API_KEY"),
+                    "url": "https://api.sambanova.ai/v1/chat/completions",
+                    "model": "Meta-Llama-3.3-70B-Instruct",
+                    "type": "openai_compatible",
+                    "cooldown_until": 0
+                },
+                # PRIORITY 4: NVIDIA NIM (direct)
+                {
+                    "name": "NVIDIA NIM",
+                    "key": os.getenv("NVIDIA_API_KEY"),
+                    "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+                    "model": "deepseek-ai/deepseek-v4-flash-0731",
+                    "type": "openai_compatible",
+                    "cooldown_until": 0
+                },
+                # Legacy providers kept as referral failsafes (most have stale keys).
+                # PRIORITY 5: Anthropic Claude
+                {
+                    "name": "Anthropic Claude",
+                    "key": os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"),
+                    "url": "https://api.anthropic.com/v1/messages",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "type": "anthropic",
+                    "cooldown_until": 0
+                },
+                # PRIORITY 6: OpenAI
+                {
+                    "name": "OpenAI API",
+                    "key": os.getenv("OPENAI_API_KEY"),
+                    "url": "https://api.openai.com/v1/chat/completions",
+                    "model": "gpt-4o-mini",
+                    "type": "openai_compatible",
+                    "cooldown_until": 0
+                }
+            ]
 
     def generate_json(self, prompt: str, system_prompt: str = "Respond strictly in valid JSON.") -> dict:
         now = time.time()
@@ -155,31 +130,36 @@ class MultiAIProvider:
             return None
 
     def _call_openai_compatible(self, provider: dict, prompt: str, system_prompt: str) -> dict:
-        payload = json.dumps({
-            "model": provider["model"],
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "response_format": {"type": "json_object"},
-            "temperature": 0.7
-        }).encode("utf-8")
+            payload = {
+                "model": provider["model"],
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.7
+            }
+            # Fireworks models think by default; disable to get the raw answer,
+            # same as the knife-agency failover chain.
+            if provider.get("thinking_disabled"):
+                payload["thinking"] = {"type": "disabled"}
 
-        headers = {
-            "Authorization": f"Bearer {provider['key']}",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/3.0"
-        }
+            headers = {
+                "Authorization": f"Bearer {provider['key']}",
+                "Content-Type": "application/json",
+                # Our Cloudflare relay returns 1010 for python-urllib's default UA.
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AutoClipper/3.0"
+            }
 
-        try:
-            req = urllib.request.Request(provider["url"], data=payload, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                content = data["choices"][0]["message"]["content"]
-                return json.loads(content)
-        except Exception as e:
-            print(f"Provider '{provider['name']}' call error: {e}")
-            return None
+            try:
+                req = urllib.request.Request(provider["url"], data=json.dumps(payload).encode("utf-8"), headers=headers)
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    content = data["choices"][0]["message"]["content"]
+                    return json.loads(content)
+            except Exception as e:
+                print(f"Provider '{provider['name']}' call error: {e}")
+                return None
 
     def _call_gemini(self, provider: dict, prompt: str, system_prompt: str) -> dict:
         url = f"{provider['url']}?key={provider['key']}"
