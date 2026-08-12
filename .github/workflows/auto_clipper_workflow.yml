@@ -1,0 +1,101 @@
+name: AutoClipper Serverless Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Source Video URL or Topic Prompt'
+        required: true
+        default: 'Why do we dream?'
+      max_clips:
+        description: 'Max Shorts to create'
+        required: false
+        default: '3'
+
+  repository_dispatch:
+    types: [make_short]
+
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  clip-and-post:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'repository_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'make-short') ||
+      github.event_name == 'issues'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies & FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r worker/requirements.txt
+
+      - name: Run AutoClipper Pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          ANYTHING_API_KEY: ${{ secrets.ANYTHING_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          YOUTUBE_OAUTH_TOKEN: ${{ secrets.YOUTUBE_OAUTH_TOKEN }}
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_TEXT="${{ github.event.inputs.video_url }}"
+            MODE="stickman"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            INPUT_TEXT="${{ github.event.client_payload.video_url }}"
+            MODE="${{ github.event.client_payload.mode }}"
+          else
+            INPUT_TEXT="${{ github.event.issue.body }}"
+            MODE="stickman"
+          fi
+
+          echo "==============================================="
+          echo "Processing Payload: $INPUT_TEXT | Mode: $MODE"
+          echo "==============================================="
+
+          LOWER_INPUT=$(echo "$INPUT_TEXT" | tr '[:upper:]' '[:lower:]')
+          if [ "$MODE" = "research" ] || [[ "$LOWER_INPUT" == *"ideas"* ]] || [[ "$LOWER_INPUT" == *"trending"* ]]; then
+            python worker/main.py --research "saas_tech"
+          elif [[ "$INPUT_TEXT" =~ ^https?:// ]]; then
+            python worker/main.py --url "$INPUT_TEXT"
+          else
+            python worker/main.py --stickman --topic "$INPUT_TEXT"
+          fi
+
+      - name: Upload generated video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-clipper-video
+          path: |
+            /tmp/auto_clipper/stickman/*.mp4
+            worker/*.mp4
+            /tmp/auto_clipper/*.mp4
+          if-no-files-found: warn
+
